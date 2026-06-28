@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ucamp.gyeongjuma_be.quiz.mapper.QuizMapper">
+
+    <select id="findAll" resultType="com.ucamp.gyeongjuma_be.quiz.domain.Quiz">
+        SELECT
+                quiz_id AS quizId,
+                question,
+                created_at AS createdAt,
+                updated_at AS updatedAt,
+                deleted_at AS deletedAt,
+                is_active AS isActive
+          FROM quiz
+         WHERE is_active = true
+    </select>
+
+</mapper>
