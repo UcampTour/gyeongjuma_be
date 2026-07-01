@@ -1,7 +1,7 @@
 package com.ucamp.gyeongjuma_be.quiz.service;
 
 import com.ucamp.gyeongjuma_be.quiz.dto.QuizListResponse;
-import com.ucamp.gyeongjuma_be.quiz.mapper.QuizMapper;
+import com.ucamp.gyeongjuma_be.quiz.repository.QuizRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -12,11 +12,11 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class QuizServiceImpl implements QuizService {
 
-    private final QuizMapper quizMapper;
+    private final QuizRepository quizRepository;
 
     @Override
     public List<QuizListResponse> getQuizList() {
-        return quizMapper.findAll().stream()
+        return quizRepository.findAll().stream()
                 .map(QuizListResponse::new)
                 .collect(Collectors.toList());
     }
