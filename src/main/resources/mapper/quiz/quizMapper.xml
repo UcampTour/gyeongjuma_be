@@ -5,16 +5,57 @@
 
 <mapper namespace="com.ucamp.gyeongjuma_be.quiz.repository.QuizRepository">
 
-    <select id="findAll" resultType="com.ucamp.gyeongjuma_be.quiz.domain.Quiz">
+    <select id="findVisitedPlaceQuizList" resultType="com.ucamp.gyeongjuma_be.quiz.dto.response.visitedPlaceQuizDto">
         SELECT
-                quiz_id AS quizId,
-                question,
-                created_at AS createdAt,
-                updated_at AS updatedAt,
-                deleted_at AS deletedAt,
-                is_active AS isActive
-          FROM quiz
-         WHERE is_active = true
+               p.place_id AS placeId,
+               p.place_name AS placeName,
+               COUNT(DISTINCT pq.quiz_id) AS totalQuizCnt,
+               COUNT(DISTINCT CASE WHEN mqr.is_correct = TRUE THEN mqr.quiz_id END) AS correctQuizCnt,
+               MAX(pq.description) AS description,
+               p.first_image AS imageUrl
+          FROM visit v
+          JOIN member m
+            ON m.member_id = v.member_id
+          JOIN place p
+            ON p.place_id = v.place_id
+           AND p.is_active = TRUE
+          JOIN place_quiz pq
+            ON pq.place_id = p.place_id
+           AND pq.difficulty = m.difficulty
+          JOIN quiz q
+            ON q.quiz_id = pq.quiz_id
+           AND q.is_active = TRUE
+     LEFT JOIN member_quiz_response mqr
+            ON mqr.member_id = v.member_id
+           AND mqr.quiz_id = pq.quiz_id
+         WHERE v.member_id = #{memberId}
+      GROUP BY p.place_id, p.place_name, p.first_image
+      ORDER BY p.place_id
+    </select>
+
+    <select id="findLockedPlaceQuizList" resultType="com.ucamp.gyeongjuma_be.quiz.dto.response.lockedPlaceQuizDto">
+        SELECT
+               p.place_id AS placeId,
+               p.place_name AS placeName,
+               p.first_image AS imageUrl
+          FROM member m
+          JOIN place p
+            ON p.is_active = TRUE
+          JOIN place_quiz pq
+            ON pq.place_id = p.place_id
+           AND pq.difficulty = m.difficulty
+          JOIN quiz q
+            ON q.quiz_id = pq.quiz_id
+           AND q.is_active = TRUE
+         WHERE m.member_id = #{memberId}
+           AND NOT EXISTS (
+                    SELECT 1
+                      FROM visit v
+                     WHERE v.member_id = #{memberId}
+                       AND v.place_id = p.place_id
+                )
+      GROUP BY p.place_id, p.place_name, p.first_image
+      ORDER BY p.place_id
     </select>
 
 </mapper>
