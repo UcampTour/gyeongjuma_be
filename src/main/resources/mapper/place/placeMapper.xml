@@ -86,4 +86,94 @@
         ORDER BY place_id DESC
     </select>
 
+    <select id="searchPlaces" resultType="com.ucamp.gyeongjuma_be.place.dto.PlaceSearchResponse">
+        SELECT
+            p.place_id AS id,
+            p.place_name AS name,
+            COALESCE(place_description.description, '') AS description,
+            COALESCE(p.lcls_systm3, p.lcls_systm2, p.lcls_systm1, '') AS category,
+            0.0 AS rating,
+            0 AS reviewCount,
+            0 AS likes,
+            p.map_y AS lat,
+            p.map_x AS lng,
+            CASE
+                WHEN latest_congestion.score IS NULL THEN NULL
+                WHEN latest_congestion.score REGEXP '^[0-9]+(\\.[0-9]+)?$'
+                 AND CAST(latest_congestion.score AS DECIMAL(5, 2)) BETWEEN 0 AND 30 THEN '&#50668;&#50976;'
+                WHEN latest_congestion.score REGEXP '^[0-9]+(\\.[0-9]+)?$'
+                 AND CAST(latest_congestion.score AS DECIMAL(5, 2)) BETWEEN 31 AND 60 THEN '&#48372;&#53685;'
+                WHEN latest_congestion.score REGEXP '^[0-9]+(\\.[0-9]+)?$'
+                 AND CAST(latest_congestion.score AS DECIMAL(5, 2)) BETWEEN 61 AND 100 THEN '&#54844;&#51105;'
+                ELSE NULL
+            END AS congestion,
+            'UNKNOWN' AS operationStatus,
+            CASE WHEN v.place_id IS NULL THEN FALSE ELSE TRUE END AS isVisited,
+            p.first_image AS imageUrl
+        FROM place p
+        LEFT JOIN visit v
+          ON v.place_id = p.place_id
+         AND v.member_id = #{memberId}
+        LEFT JOIN (
+            SELECT place_id, MAX(description) AS description
+            FROM place_quiz
+            GROUP BY place_id
+        ) place_description
+          ON place_description.place_id = p.place_id
+        LEFT JOIN (
+            SELECT cl.place_id, cl.score
+            FROM congestion_log cl
+            JOIN (
+                SELECT place_id, MAX(log_date) AS log_date
+                FROM congestion_log
+                WHERE is_active = TRUE
+                GROUP BY place_id
+            ) latest
+              ON latest.place_id = cl.place_id
+             AND latest.log_date = cl.log_date
+            WHERE cl.is_active = TRUE
+        ) latest_congestion
+          ON latest_congestion.place_id = p.place_id
+        WHERE p.is_active = TRUE
+        <if test="search != null and search != ''">
+          AND p.place_name LIKE CONCAT('%', #{search}, '%')
+        </if>
+        ORDER BY
+        <choose>
+            <when test="sort == 'unvisited'">
+                CASE WHEN v.place_id IS NULL THEN 0 ELSE 1 END ASC,
+                p.place_name ASC
+            </when>
+            <when test="sort == 'congestion'">
+                CASE
+                    WHEN latest_congestion.score REGEXP '^[0-9]+(\\.[0-9]+)?$' THEN 0
+                    ELSE 1
+                END ASC,
+                CAST(latest_congestion.score AS DECIMAL(5, 2)) DESC,
+                p.place_name ASC
+            </when>
+            <otherwise>
+                <choose>
+                    <when test="latitude != null and longitude != null">
+                        (
+                            6371000 * ACOS(
+                                LEAST(1, GREATEST(-1,
+                                    COS(RADIANS(#{latitude}))
+                                    * COS(RADIANS(p.map_y))
+                                    * COS(RADIANS(p.map_x) - RADIANS(#{longitude}))
+                                    + SIN(RADIANS(#{latitude}))
+                                    * SIN(RADIANS(p.map_y))
+                                ))
+                            )
+                        ) ASC,
+                        p.place_name ASC
+                    </when>
+                    <otherwise>
+                        p.place_name ASC
+                    </otherwise>
+                </choose>
+            </otherwise>
+        </choose>
+    </select>
+
 </mapper>
