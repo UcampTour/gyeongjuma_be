@@ -8,8 +8,8 @@ import lombok.Setter;
 @Setter
 public class PlaceSearchResponse {
 
-    private Long id;
-    private String name;
+    private Long placeId;
+    private String placeName;
     private String description;
     private String category;
     private Double rating;
