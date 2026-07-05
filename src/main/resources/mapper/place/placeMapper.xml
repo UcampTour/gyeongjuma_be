@@ -88,8 +88,8 @@
 
     <select id="searchPlaces" resultType="com.ucamp.gyeongjuma_be.place.dto.PlaceSearchResponse">
         SELECT
-            p.place_id AS id,
-            p.place_name AS name,
+            p.place_id AS place_id,
+            p.place_name AS place_name,
             COALESCE(place_description.description, '') AS description,
             COALESCE(p.lcls_systm3, p.lcls_systm2, p.lcls_systm1, '') AS category,
             0.0 AS rating,
