@@ -17,6 +17,7 @@ public class PlaceSearchResponse {
     private Long likes;
     private Double lat;
     private Double lng;
+    private Double distance;
     private String congestion;
     private String operationStatus;
 

@@ -8,5 +8,5 @@ import java.util.List;
 public interface PlaceService {
     List<PlaceListResponse> syncPlaces();
 
-    List<PlaceSearchResponse> searchPlaces(String search, String sort, Double latitude, Double longitude);
+    List<PlaceSearchResponse> searchPlaces(Long memberId, String search, String sort, Double latitude, Double longitude);
 }
