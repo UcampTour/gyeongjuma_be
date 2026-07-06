@@ -2,11 +2,13 @@ package com.ucamp.gyeongjuma_be.common.exception;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @Slf4j
 @RestControllerAdvice // 💡 @ControllerAdvice + @ResponseBody 결합, 모든 API 컨트롤러의 예외를 감지
@@ -89,7 +91,24 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 5. 위에 정의되지 않은 그 외의 모든 예상치 못한 최상위 예외(Exception.class) 처리
+     * 5. 존재하지 않는 정적 리소스/경로 요청 (favicon.ico 등) — 스택 트레이스 없이 404만 반환
+     */
+    @ExceptionHandler(NoResourceFoundException.class)
+    protected ResponseEntity<ErrorResponse> handleNoResourceFoundException(NoResourceFoundException e) {
+        log.warn("존재하지 않는 리소스 요청: {}", e.getResourcePath());
+
+        ErrorResponse response = ErrorResponse.builder()
+                .status(HttpStatus.NOT_FOUND.value())
+                .error(HttpStatus.NOT_FOUND.name())
+                .code("C404")
+                .message("요청한 리소스를 찾을 수 없습니다.")
+                .build();
+
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    }
+
+    /**
+     * 6. 위에 정의되지 않은 그 외의 모든 예상치 못한 최상위 예외(Exception.class) 처리
      */
     @ExceptionHandler(Exception.class)
     protected ResponseEntity<ErrorResponse> handleException(Exception e) {
