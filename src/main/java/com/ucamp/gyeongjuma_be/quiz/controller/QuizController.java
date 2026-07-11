@@ -3,6 +3,8 @@ package com.ucamp.gyeongjuma_be.quiz.controller;
 import com.ucamp.gyeongjuma_be.common.dto.ApiResponse;
 import com.ucamp.gyeongjuma_be.quiz.dto.response.QuizDetailResponse;
 import com.ucamp.gyeongjuma_be.quiz.dto.response.QuizListResponse;
+import com.ucamp.gyeongjuma_be.quiz.dto.request.QuizSubmitRequest;
+import com.ucamp.gyeongjuma_be.quiz.dto.response.QuizSubmitResponse;
 import com.ucamp.gyeongjuma_be.quiz.service.QuizService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -40,6 +43,17 @@ public class QuizController {
         Long memberId = 1L;
         QuizDetailResponse response = quizService.retryQuiz(quizId, memberId);
         ApiResponse<QuizDetailResponse> apiResponse = ApiResponse.success("퀴즈를 새로 풀 수 있도록 초기화했습니다!", response);
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    @PostMapping("/{quizId}/submit")
+    public ResponseEntity<ApiResponse<QuizSubmitResponse>> submitQuiz(
+            @PathVariable Long quizId,
+            @RequestBody QuizSubmitRequest request
+    ) {
+        Long memberId = 1L;
+        QuizSubmitResponse response = quizService.submitQuiz(quizId, memberId, request);
+        ApiResponse<QuizSubmitResponse> apiResponse = ApiResponse.success("퀴즈 답안을 제출했습니다.", response);
         return ResponseEntity.ok(apiResponse);
     }
 }
