@@ -1,9 +1,8 @@
 package com.ucamp.gyeongjuma_be.quiz.service;
 
 import com.ucamp.gyeongjuma_be.quiz.dto.response.QuizDetailResponse;
+import com.ucamp.gyeongjuma_be.quiz.dto.response.QuizListItem;
 import com.ucamp.gyeongjuma_be.quiz.dto.response.QuizListResponse;
-import com.ucamp.gyeongjuma_be.quiz.dto.response.lockedPlaceQuizDto;
-import com.ucamp.gyeongjuma_be.quiz.dto.response.visitedPlaceQuizDto;
 import com.ucamp.gyeongjuma_be.quiz.repository.QuizRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,12 +19,9 @@ public class QuizServiceImpl implements QuizService {
     @Override
     public QuizListResponse getQuizList(Long memberId) {
 
-        List<visitedPlaceQuizDto> visitedPlaceQuizList = quizRepository.findVisitedPlaceQuizList(memberId);
-        List<lockedPlaceQuizDto> lockedPlaceQuizList = quizRepository.findLockedPlaceQuizList(memberId);
-
+        List<QuizListItem> quizList = quizRepository.findQuizList(memberId);
         return QuizListResponse.builder()
-                .visitedPlaceQuizDtoList(visitedPlaceQuizList)
-                .lockedPlaceQuizDtoList(lockedPlaceQuizList)
+                .quizList(quizList)
                 .build();
     }
 
