@@ -27,18 +27,18 @@ public class QuizController {
         return ResponseEntity.ok(apiResponse);
     }
 
-    @GetMapping("/{placeId}")
-    public ResponseEntity<ApiResponse<QuizDetailResponse>> getQuizDetail(@PathVariable Long placeId) {
+    @GetMapping("/{quizId}")
+    public ResponseEntity<ApiResponse<QuizDetailResponse>> getQuizDetail(@PathVariable Long quizId) {
         Long memberId = 1L;
-        QuizDetailResponse response = quizService.getQuizDetail(placeId, memberId);
-        ApiResponse<QuizDetailResponse> apiResponse = ApiResponse.success("퀴즈 상세 조회를 성공했습니다!", response);
+        QuizDetailResponse response = quizService.getQuizDetail(quizId, memberId);
+        ApiResponse<QuizDetailResponse> apiResponse = ApiResponse.success("퀴즈 상세 정보 조회를 성공했습니다!", response);
         return ResponseEntity.ok(apiResponse);
     }
 
-    @PostMapping("/{placeId}/retry")
-    public ResponseEntity<ApiResponse<QuizDetailResponse>> retryQuiz(@PathVariable Long placeId) {
+    @PostMapping("/{quizId}/retry")
+    public ResponseEntity<ApiResponse<QuizDetailResponse>> retryQuiz(@PathVariable Long quizId) {
         Long memberId = 1L;
-        QuizDetailResponse response = quizService.retryQuiz(placeId, memberId);
+        QuizDetailResponse response = quizService.retryQuiz(quizId, memberId);
         ApiResponse<QuizDetailResponse> apiResponse = ApiResponse.success("퀴즈를 새로 풀 수 있도록 초기화했습니다!", response);
         return ResponseEntity.ok(apiResponse);
     }
