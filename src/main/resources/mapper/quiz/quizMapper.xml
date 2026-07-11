@@ -53,36 +53,53 @@
     </select>
 
     <resultMap id="quizDetailResultMap" type="com.ucamp.gyeongjuma_be.quiz.dto.response.QuizDetailResponse">
-        <id property="placeId" column="place_id"/>
-        <result property="placeName" column="place_name"/>
+        <id property="quizId" column="quiz_id"/>
+        <result property="placeId" column="place_id"/>
         <result property="imageUrl" column="image_url"/>
-        <result property="totalQuestions" column="total_questions"/>
+        <result property="title" column="title"/>
+        <result property="description" column="description"/>
         <result property="correctQuestions" column="correct_questions"/>
-        <result property="progressRate" column="progress_rate"/>
-        <collection property="questions" ofType="com.ucamp.gyeongjuma_be.quiz.dto.response.QuizDetailResponse$QuestionResponse">
+        <result property="lastQuestionIndex" column="last_question_index"/>
+        <result property="quizStatus" column="quiz_status"/>
+        <collection property="questions" ofType="com.ucamp.gyeongjuma_be.quiz.dto.response.QuizDetailResponse$quizQuestion">
             <id property="quizId" column="question_quiz_id"/>
             <result property="question" column="question_text"/>
+            <result property="isSolved" column="question_is_solved"/>
             <result property="isCorrect" column="question_is_correct"/>
-            <collection property="options" ofType="com.ucamp.gyeongjuma_be.quiz.dto.response.QuizDetailResponse$OptionResponse">
+            <collection property="options" ofType="com.ucamp.gyeongjuma_be.quiz.dto.response.QuizDetailResponse$quizOption">
                 <id property="answerId" column="option_answer_id"/>
                 <result property="content" column="option_content"/>
             </collection>
         </collection>
     </resultMap>
 
-    <select id="findQuizDetailByPlaceId" resultMap="quizDetailResultMap">
+    <select id="findQuizDetailByQuizId" resultMap="quizDetailResultMap">
         SELECT
+               pqi.place_quiz_info_id AS quiz_id,
                p.place_id AS place_id,
-               p.place_name AS place_name,
                p.first_image AS image_url,
-               stats.total_questions AS total_questions,
+               pqi.title AS title,
+               pqi.description AS description,
                stats.correct_questions AS correct_questions,
                CASE
-                   WHEN stats.total_questions = 0 THEN 0
-                   ELSE FLOOR(stats.correct_questions * 100 / stats.total_questions)
-               END AS progress_rate,
+                   WHEN stats.is_visited = 0 THEN 'LOCKED'
+                   WHEN stats.solved_questions = stats.total_questions THEN 'COMPLETED'
+                   WHEN stats.solved_questions > 0 THEN 'PROGRESS'
+                   ELSE 'AVAILABLE'
+               END AS quiz_status,
+               stats.last_question_index AS last_question_index,
                q.quiz_id AS question_quiz_id,
                q.question AS question_text,
+               CASE
+                   WHEN EXISTS (
+                            SELECT 1
+                              FROM member_quiz_response mqr
+                             WHERE mqr.member_id = #{memberId}
+                               AND mqr.quiz_id = q.quiz_id
+                        )
+                   THEN TRUE
+                   ELSE FALSE
+               END AS question_is_solved,
                CASE
                    WHEN EXISTS (
                             SELECT 1
@@ -97,13 +114,13 @@
                qa.answer_id AS option_answer_id,
                qa.content AS option_content
           FROM member m
-          JOIN place p
-            ON p.place_id = #{placeId}
-           AND p.is_active = TRUE
           JOIN place_quiz_info pqi
-            ON pqi.place_id = p.place_id
+            ON pqi.place_quiz_info_id = #{quizId}
            AND pqi.difficulty = m.difficulty
            AND pqi.is_active = TRUE
+          JOIN place p
+            ON p.place_id = pqi.place_id
+           AND p.is_active = TRUE
           JOIN place_quiz pq
             ON pq.place_quiz_info_id = pqi.place_quiz_info_id
           JOIN quiz q
@@ -113,12 +130,15 @@
             ON qa.quiz_id = q.quiz_id
           JOIN (
                 SELECT
-                       pqi.place_id,
+                       pqi.place_quiz_info_id,
                        COUNT(DISTINCT pq.quiz_id) AS total_questions,
-                       COUNT(DISTINCT CASE WHEN mqr.is_correct = TRUE THEN mqr.quiz_id END) AS correct_questions
+                       COUNT(DISTINCT mqr.quiz_id) AS solved_questions,
+                       COUNT(DISTINCT CASE WHEN mqr.is_correct = TRUE THEN mqr.quiz_id END) AS correct_questions,
+                       COUNT(DISTINCT mqr.quiz_id) AS last_question_index,
+                       MAX(CASE WHEN v.visit_id IS NOT NULL THEN 1 ELSE 0 END) AS is_visited
                   FROM member m
                   JOIN place_quiz_info pqi
-                    ON pqi.place_id = #{placeId}
+                    ON pqi.place_quiz_info_id = #{quizId}
                    AND pqi.difficulty = m.difficulty
                    AND pqi.is_active = TRUE
                   JOIN place_quiz pq
@@ -129,15 +149,18 @@
              LEFT JOIN member_quiz_response mqr
                     ON mqr.member_id = #{memberId}
                    AND mqr.quiz_id = pq.quiz_id
+             LEFT JOIN visit v
+                    ON v.member_id = m.member_id
+                   AND v.place_id = pqi.place_id
                  WHERE m.member_id = #{memberId}
-              GROUP BY pqi.place_id
+              GROUP BY pqi.place_quiz_info_id
                ) stats
-            ON stats.place_id = p.place_id
+            ON stats.place_quiz_info_id = pqi.place_quiz_info_id
          WHERE m.member_id = #{memberId}
-      ORDER BY pq.quiz_order, qa.answer_id
+      ORDER BY q.quiz_id, qa.answer_id
     </select>
 
-    <delete id="deleteQuizResponsesByPlaceId">
+    <delete id="deleteQuizResponsesByQuizId">
         DELETE mqr
           FROM member_quiz_response mqr
           JOIN place_quiz pq
@@ -148,7 +171,7 @@
             ON m.member_id = mqr.member_id
            AND m.difficulty = pqi.difficulty
          WHERE mqr.member_id = #{memberId}
-           AND pqi.place_id = #{placeId}
+           AND pqi.place_quiz_info_id = #{quizId}
     </delete>
 
 </mapper>

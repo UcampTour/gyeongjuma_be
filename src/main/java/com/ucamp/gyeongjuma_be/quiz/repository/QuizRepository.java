@@ -15,7 +15,7 @@ public interface QuizRepository {
     // 퀴즈 목록 조회
     List<QuizListItem> findQuizList(Long memberId);
     // 퀴즈 상세 조회
-    QuizDetailResponse findQuizDetailByPlaceId(@Param("placeId") Long placeId, @Param("memberId") Long memberId);
+    QuizDetailResponse findQuizDetailByQuizId(@Param("quizId") Long quizId, @Param("memberId") Long memberId);
     // 퀴즈 새로 풀기
-    void deleteQuizResponsesByPlaceId(@Param("placeId") Long placeId, @Param("memberId") Long memberId);
+    void deleteQuizResponsesByQuizId(@Param("quizId") Long quizId, @Param("memberId") Long memberId);
 }
