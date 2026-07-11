@@ -174,4 +174,54 @@
            AND pqi.place_quiz_info_id = #{quizId}
     </delete>
 
+    <select id="findSubmitResult" resultType="com.ucamp.gyeongjuma_be.quiz.dto.response.QuizSubmitResponse">
+        SELECT
+               qa.is_correct AS isCorrect,
+               (
+                   SELECT MAX(correct_qa.answer_id)
+                     FROM quiz_answer correct_qa
+                    WHERE correct_qa.quiz_id = q.quiz_id
+                      AND correct_qa.is_correct = TRUE
+               ) AS correctAnswerId,
+               CASE
+                   WHEN NOT EXISTS (
+                            SELECT 1
+                              FROM place_quiz next_pq
+                              JOIN quiz next_q
+                                ON next_q.quiz_id = next_pq.quiz_id
+                               AND next_q.is_active = TRUE
+                             WHERE next_pq.place_quiz_info_id = pqi.place_quiz_info_id
+                               AND next_q.quiz_id > q.quiz_id
+                        )
+                   THEN TRUE
+                   ELSE FALSE
+               END AS isLastQuestion
+          FROM member m
+          JOIN place_quiz_info pqi
+            ON pqi.place_quiz_info_id = #{quizId}
+           AND pqi.difficulty = m.difficulty
+           AND pqi.is_active = TRUE
+          JOIN place_quiz pq
+            ON pq.place_quiz_info_id = pqi.place_quiz_info_id
+          JOIN quiz q
+            ON q.quiz_id = pq.quiz_id
+           AND q.quiz_id = #{questionId}
+           AND q.is_active = TRUE
+          JOIN quiz_answer qa
+            ON qa.quiz_id = q.quiz_id
+           AND qa.answer_id = #{selectedOptionId}
+         WHERE m.member_id = #{memberId}
+    </select>
+
+    <delete id="deleteMemberQuizResponse">
+        DELETE FROM member_quiz_response
+         WHERE member_id = #{memberId}
+           AND quiz_id = #{questionId}
+    </delete>
+
+    <insert id="insertMemberQuizResponse">
+        INSERT INTO member_quiz_response (member_id, quiz_id, answer_id, is_correct)
+        VALUES (#{memberId}, #{questionId}, #{selectedOptionId}, #{isCorrect})
+    </insert>
+
 </mapper>
