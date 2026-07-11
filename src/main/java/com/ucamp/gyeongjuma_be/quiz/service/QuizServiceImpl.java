@@ -26,14 +26,14 @@ public class QuizServiceImpl implements QuizService {
     }
 
     @Override
-    public QuizDetailResponse getQuizDetail(Long placeId, Long memberId) {
-        return quizRepository.findQuizDetailByPlaceId(placeId, memberId);
+    public QuizDetailResponse getQuizDetail(Long quizId, Long memberId) {
+        return quizRepository.findQuizDetailByQuizId(quizId, memberId);
     }
 
     @Override
     @Transactional
-    public QuizDetailResponse retryQuiz(Long placeId, Long memberId) {
-        quizRepository.deleteQuizResponsesByPlaceId(placeId, memberId);
-        return quizRepository.findQuizDetailByPlaceId(placeId, memberId);
+    public QuizDetailResponse retryQuiz(Long quizId, Long memberId) {
+        quizRepository.deleteQuizResponsesByQuizId(quizId, memberId);
+        return quizRepository.findQuizDetailByQuizId(quizId, memberId);
     }
 }

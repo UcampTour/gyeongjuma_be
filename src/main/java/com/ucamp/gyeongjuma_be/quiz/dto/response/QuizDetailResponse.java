@@ -13,30 +13,33 @@ import java.util.List;
 @AllArgsConstructor
 public class QuizDetailResponse {
 
+    private Long quizId;
     private Long placeId;
-    private String placeName;
     private String imageUrl;
-    private Integer totalQuestions;
+    private String title;
+    private String description;
     private Integer correctQuestions;
-    private Integer progressRate;
-    private List<QuestionResponse> questions;
+    private Integer lastQuestionIndex;
+    private String quizStatus;
+    private List<quizQuestion> questions;
 
     @Data
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class QuestionResponse {
+    public static class quizQuestion {
         private Long quizId;
         private String question;
+        private Boolean isSolved;
         private Boolean isCorrect;
-        private List<OptionResponse> options;
+        private List<quizOption> options;
     }
 
     @Data
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class OptionResponse {
+    public static class quizOption {
         private Long answerId;
         private String content;
     }
