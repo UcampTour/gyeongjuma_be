@@ -2,6 +2,7 @@ package com.ucamp.gyeongjuma_be.quiz.repository;
 
 import com.ucamp.gyeongjuma_be.quiz.dto.response.QuizDetailResponse;
 import com.ucamp.gyeongjuma_be.quiz.dto.response.QuizListItem;
+import com.ucamp.gyeongjuma_be.quiz.dto.response.QuizSubmitResponse;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
@@ -18,4 +19,16 @@ public interface QuizRepository {
     QuizDetailResponse findQuizDetailByQuizId(@Param("quizId") Long quizId, @Param("memberId") Long memberId);
     // 퀴즈 새로 풀기
     void deleteQuizResponsesByQuizId(@Param("quizId") Long quizId, @Param("memberId") Long memberId);
+
+    QuizSubmitResponse findSubmitResult(@Param("quizId") Long quizId,
+                                        @Param("questionId") Long questionId,
+                                        @Param("selectedOptionId") Long selectedOptionId,
+                                        @Param("memberId") Long memberId);
+
+    void deleteMemberQuizResponse(@Param("memberId") Long memberId, @Param("questionId") Long questionId);
+
+    void insertMemberQuizResponse(@Param("memberId") Long memberId,
+                                  @Param("questionId") Long questionId,
+                                  @Param("selectedOptionId") Long selectedOptionId,
+                                  @Param("isCorrect") Boolean isCorrect);
 }
