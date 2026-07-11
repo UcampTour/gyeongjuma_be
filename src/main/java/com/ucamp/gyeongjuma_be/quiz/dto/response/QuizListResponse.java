@@ -8,6 +8,5 @@ import java.util.List;
 @Builder
 public class QuizListResponse {
 
-    private List<visitedPlaceQuizDto> visitedPlaceQuizDtoList;
-    private List<lockedPlaceQuizDto> lockedPlaceQuizDtoList;
+    private List<QuizListItem> quizList;
 }
