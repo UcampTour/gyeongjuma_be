@@ -34,6 +34,53 @@ public class PlaceServiceImpl implements PlaceService {
     }
 
     @Override
+    public int syncPlaceDetails() {
+        List<Place> places = placeRepository.findAll();
+
+        if (places.isEmpty()) {
+            return 0;
+        }
+
+        int updateCount = 0;
+
+        for (Place place : places) {
+            Place detail = tourApiClient.getPlaceDetail(place.getPlaceId());
+
+            if (detail == null) {
+                continue;
+            }
+
+            updateCount += placeRepository.updateDetail(detail);
+        }
+
+        return updateCount;
+    }
+
+    @Override
+    public int syncPlaceContents() {
+        List<Place> places = placeRepository.findAll();
+
+        if (places.isEmpty()) {
+            return 0;
+        }
+
+        int saveCount = 0;
+
+        for (Place place : places) {
+            String overview = tourApiClient.getPlaceOverview(place.getPlaceId());
+
+            if (overview == null) {
+                continue;
+            }
+
+            placeRepository.deletePlaceContent(place.getPlaceId(), "KOR", "NORMAL");
+            saveCount += placeRepository.savePlaceContent(place.getPlaceId(), overview, "KOR", "NORMAL");
+        }
+
+        return saveCount;
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public List<PlaceSearchResponse> searchPlaces(Long memberId, String search, String sort, Double latitude, Double longitude) {
 
