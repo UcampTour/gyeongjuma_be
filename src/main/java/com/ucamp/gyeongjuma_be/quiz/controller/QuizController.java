@@ -5,6 +5,7 @@ import com.ucamp.gyeongjuma_be.quiz.dto.response.QuizDetailResponse;
 import com.ucamp.gyeongjuma_be.quiz.dto.response.QuizListResponse;
 import com.ucamp.gyeongjuma_be.quiz.dto.request.QuizSubmitRequest;
 import com.ucamp.gyeongjuma_be.quiz.dto.response.QuizSubmitResponse;
+import com.ucamp.gyeongjuma_be.quiz.dto.response.QuizResultResponse;
 import com.ucamp.gyeongjuma_be.quiz.service.QuizService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +27,7 @@ public class QuizController {
     public ResponseEntity<ApiResponse<QuizListResponse>> getQuizList() {
         Long memberId = 1L;
         QuizListResponse response = quizService.getQuizList(memberId);
-        ApiResponse<QuizListResponse> apiResponse = ApiResponse.success("퀴즈 목록 조회를 성공했습니다!", response);
+        ApiResponse<QuizListResponse> apiResponse = ApiResponse.success("퀴즈 목록 조회 성공", response);
         return ResponseEntity.ok(apiResponse);
     }
 
@@ -34,7 +35,7 @@ public class QuizController {
     public ResponseEntity<ApiResponse<QuizDetailResponse>> getQuizDetail(@PathVariable Long quizId) {
         Long memberId = 1L;
         QuizDetailResponse response = quizService.getQuizDetail(quizId, memberId);
-        ApiResponse<QuizDetailResponse> apiResponse = ApiResponse.success("퀴즈 상세 정보 조회를 성공했습니다!", response);
+        ApiResponse<QuizDetailResponse> apiResponse = ApiResponse.success("퀴즈 상세 정보 조회 성공", response);
         return ResponseEntity.ok(apiResponse);
     }
 
@@ -42,7 +43,7 @@ public class QuizController {
     public ResponseEntity<ApiResponse<QuizDetailResponse>> retryQuiz(@PathVariable Long quizId) {
         Long memberId = 1L;
         QuizDetailResponse response = quizService.retryQuiz(quizId, memberId);
-        ApiResponse<QuizDetailResponse> apiResponse = ApiResponse.success("퀴즈를 새로 풀 수 있도록 초기화했습니다!", response);
+        ApiResponse<QuizDetailResponse> apiResponse = ApiResponse.success("퀴즈 초기화 성공", response);
         return ResponseEntity.ok(apiResponse);
     }
 
@@ -53,7 +54,15 @@ public class QuizController {
     ) {
         Long memberId = 1L;
         QuizSubmitResponse response = quizService.submitQuiz(quizId, memberId, request);
-        ApiResponse<QuizSubmitResponse> apiResponse = ApiResponse.success("퀴즈 답안을 제출했습니다.", response);
+        ApiResponse<QuizSubmitResponse> apiResponse = ApiResponse.success("퀴즈 답안 제출 성공", response);
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    @GetMapping("/{quizId}/result")
+    public ResponseEntity<ApiResponse<QuizResultResponse>> getQuizResult(@PathVariable Long quizId) {
+        Long memberId = 1L;
+        QuizResultResponse response = quizService.getQuizResult(quizId, memberId);
+        ApiResponse<QuizResultResponse> apiResponse = ApiResponse.success("퀴즈 결과 조회 성공", response);
         return ResponseEntity.ok(apiResponse);
     }
 }
