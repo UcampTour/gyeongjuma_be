@@ -2,6 +2,7 @@ package com.ucamp.gyeongjuma_be.place.service;
 
 import com.ucamp.gyeongjuma_be.place.domain.Place;
 import com.ucamp.gyeongjuma_be.place.dto.PlaceListResponse;
+import com.ucamp.gyeongjuma_be.place.dto.PlaceSearchResponse;
 import com.ucamp.gyeongjuma_be.place.repository.PlaceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -31,4 +32,12 @@ public class PlaceServiceImpl implements PlaceService {
                 .map(PlaceListResponse::from)
                 .toList();
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PlaceSearchResponse> searchPlaces(Long memberId, String search, String sort, Double latitude, Double longitude) {
+
+        return placeRepository.searchPlaces(search, sort, latitude, longitude, memberId);
+    }
+
 }
