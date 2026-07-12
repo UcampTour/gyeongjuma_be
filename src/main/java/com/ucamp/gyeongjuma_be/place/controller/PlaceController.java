@@ -28,6 +28,28 @@ public class PlaceController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @PostMapping("/details")
+    public ResponseEntity<ApiResponse<Integer>> syncPlaceDetails() {
+
+        int updateCount = placeService.syncPlaceDetails();
+
+        ApiResponse<Integer> apiResponse =
+                ApiResponse.success("관광지 상세 정보 저장이 완료되었습니다.", updateCount);
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    @PostMapping("/contents")
+    public ResponseEntity<ApiResponse<Integer>> syncPlaceContents() {
+
+        int saveCount = placeService.syncPlaceContents();
+
+        ApiResponse<Integer> apiResponse =
+                ApiResponse.success("관광지 해설 저장이 완료되었습니다.", saveCount);
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
     @GetMapping
     public ResponseEntity<ApiResponse<List<PlaceSearchResponse>>> searchPlaces(
             @RequestParam(required = false) String search,
