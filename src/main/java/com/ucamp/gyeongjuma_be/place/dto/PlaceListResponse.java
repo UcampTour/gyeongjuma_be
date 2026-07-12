@@ -37,6 +37,8 @@ public class PlaceListResponse {
                 .lclsSystm2(place.getLclsSystm2())
                 .lclsSystm3(place.getLclsSystm3())
                 .radiusMeters(place.getRadiusMeters())
+                .add1(place.getAdd1())
+                .add2(place.getAdd2())
                 .build();
     }
 }

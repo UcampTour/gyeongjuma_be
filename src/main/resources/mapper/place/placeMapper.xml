@@ -62,6 +62,40 @@
             is_active = VALUES(is_active)
     </insert>
 
+    <update id="updateDetail">
+        UPDATE place
+        SET
+            tel = #{tel},
+            parking = #{parking},
+            usetime = #{usetime},
+            restdate = #{restdate},
+            updated_at = NOW()
+        WHERE place_id = #{placeId}
+          AND is_active = TRUE
+    </update>
+
+    <delete id="deletePlaceContent">
+        DELETE FROM place_content
+        WHERE place_id = #{placeId}
+          AND language = #{language}
+          AND difficulty = #{difficulty}
+    </delete>
+
+    <insert id="savePlaceContent">
+        INSERT INTO place_content (
+            description,
+            language,
+            difficulty,
+            place_id
+        )
+        VALUES (
+            #{description},
+            #{language},
+            #{difficulty},
+            #{placeId}
+        )
+    </insert>
+
     <select id="findAll" resultType="com.ucamp.gyeongjuma_be.place.domain.Place">
         SELECT
             place_id AS placeId,
@@ -77,13 +111,104 @@
             lcls_systm2 AS lclsSystm2,
             lcls_systm3 AS lclsSystm3,
             radius_meters AS radiusMeters,
+            parking,
+            usetime,
+            restdate,
             created_at AS createdAt,
             updated_at AS updatedAt,
             deleted_at AS deletedAt,
             is_active AS isActive
         FROM place
-        WHERE is_active = true
+        WHERE is_active = TRUE
         ORDER BY place_id DESC
+    </select>
+
+    <select id="searchPlaces" resultType="com.ucamp.gyeongjuma_be.place.dto.PlaceSearchResponse">
+        SELECT
+            p.place_id AS place_id,
+            p.place_name AS place_name,
+            COALESCE(pc.description, '') AS description, <!-- 추후 구현 예정 -->
+            COALESCE(p.lcls_systm3, p.lcls_systm2, p.lcls_systm1, '') AS category,
+            0.0 AS rating, <!-- 추후 구현 예정 -->
+            0 AS reviewCount, <!-- 추후 구현 예정 -->
+            0 AS likes, <!-- 추후 구현 예정 -->
+            p.map_y AS lat,
+            p.map_x AS lng,
+            p.add1 AS add1,
+            p.add2 AS add2,
+            <choose>
+                <when test="latitude != null and longitude != null">
+                    ROUND(
+                        6371 * ACOS(
+                            LEAST(1, GREATEST(-1,
+                                COS(RADIANS(#{latitude}))
+                                * COS(RADIANS(p.map_y))
+                                * COS(RADIANS(p.map_x) - RADIANS(#{longitude}))
+                                + SIN(RADIANS(#{latitude}))
+                                * SIN(RADIANS(p.map_y))
+                            ))
+                        ),
+                        2
+                    )
+                </when>
+                <otherwise>
+                    NULL
+                </otherwise>
+            </choose> AS distance,
+            CASE
+                WHEN cl.score IS NULL THEN '정보 없음'
+                WHEN cl.score REGEXP '^[0-9]+(\\.[0-9]+)?$'
+                 AND CAST(cl.score AS DECIMAL(5, 2)) BETWEEN 0 AND 30 THEN '여유'
+                WHEN cl.score REGEXP '^[0-9]+(\\.[0-9]+)?$'
+                 AND CAST(cl.score AS DECIMAL(5, 2)) BETWEEN 31 AND 60 THEN '보통'
+                WHEN cl.score REGEXP '^[0-9]+(\\.[0-9]+)?$'
+                 AND CAST(cl.score AS DECIMAL(5, 2)) BETWEEN 61 AND 100 THEN '혼잡'
+                ELSE NULL
+            END AS congestion,
+            '정보 없음' AS operationStatus, <!-- 추후 구현 예정 -->
+            CASE WHEN v.place_id IS NULL THEN FALSE ELSE TRUE END AS isVisited,
+            p.first_image AS imageUrl
+        FROM place p
+        LEFT JOIN visit v
+          ON v.place_id = p.place_id
+         AND v.member_id = #{memberId}
+        LEFT JOIN place_content pc
+          ON p.place_id = pc.place_id
+         AND pc.difficulty = (select difficulty from member where member_id = #{memberId})
+        LEFT JOIN congestion_log cl
+          ON cl.place_id = p.place_id
+         AND cl.log_date = CURDATE()
+         AND cl.is_active = TRUE
+        WHERE p.is_active = TRUE
+        <if test="search != null and search != ''">
+          AND p.place_name LIKE CONCAT('%', #{search}, '%')
+        </if>
+        ORDER BY
+        <choose>
+            <when test="sort == 'unvisited'">
+                CASE WHEN v.place_id IS NULL THEN 0 ELSE 1 END ASC,
+                p.place_name ASC
+            </when>
+            <when test="sort == 'congestion'">
+                CASE
+                    WHEN cl.score REGEXP '^[0-9]+(\\.[0-9]+)?$' THEN 0
+                    ELSE 1
+                END ASC,
+                CAST(cl.score AS DECIMAL(5, 2)) DESC,
+                p.place_name ASC
+            </when>
+            <otherwise>
+                <choose>
+                    <when test="latitude != null and longitude != null">
+                        distance ASC,
+                        p.place_name ASC
+                    </when>
+                    <otherwise>
+                        p.place_name ASC
+                    </otherwise>
+                </choose>
+            </otherwise>
+        </choose>
     </select>
 
 </mapper>
