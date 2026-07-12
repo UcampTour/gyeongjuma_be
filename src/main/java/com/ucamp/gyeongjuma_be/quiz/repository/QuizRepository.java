@@ -3,6 +3,7 @@ package com.ucamp.gyeongjuma_be.quiz.repository;
 import com.ucamp.gyeongjuma_be.quiz.dto.response.QuizDetailResponse;
 import com.ucamp.gyeongjuma_be.quiz.dto.response.QuizListItem;
 import com.ucamp.gyeongjuma_be.quiz.dto.response.QuizSubmitResponse;
+import com.ucamp.gyeongjuma_be.quiz.dto.response.QuizResultResponse;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
@@ -31,4 +32,12 @@ public interface QuizRepository {
                                   @Param("questionId") Long questionId,
                                   @Param("selectedOptionId") Long selectedOptionId,
                                   @Param("isCorrect") Boolean isCorrect);
+
+    int insertQuizRewardHistoryIfAbsent(@Param("memberId") Long memberId,
+                                        @Param("questionId") Long questionId,
+                                        @Param("point") int point);
+
+    void increaseMemberPoint(@Param("memberId") Long memberId, @Param("point") int point);
+
+    QuizResultResponse findQuizResultByQuizId(@Param("quizId") Long quizId, @Param("memberId") Long memberId);
 }

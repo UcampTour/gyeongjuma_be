@@ -224,4 +224,84 @@
         VALUES (#{memberId}, #{questionId}, #{selectedOptionId}, #{isCorrect})
     </insert>
 
+    <insert id="insertQuizRewardHistoryIfAbsent">
+        INSERT INTO point_history (point, description, member_id)
+        SELECT #{point}, CONCAT(#{questionId}, '_', #{memberId}), #{memberId}
+         WHERE NOT EXISTS (
+                   SELECT 1
+                     FROM point_history
+                    WHERE member_id = #{memberId}
+                      AND description = CONCAT(#{questionId}, '_', #{memberId})
+               )
+    </insert>
+
+    <update id="increaseMemberPoint">
+        UPDATE member
+           SET point = point + #{point}
+         WHERE member_id = #{memberId}
+    </update>
+
+    <resultMap id="quizResultResultMap" type="com.ucamp.gyeongjuma_be.quiz.dto.response.QuizResultResponse">
+        <id property="quizId" column="quiz_id"/>
+        <result property="totalQuestions" column="total_questions"/>
+        <result property="correctQuestions" column="correct_questions"/>
+        <collection property="questions" ofType="com.ucamp.gyeongjuma_be.quiz.dto.response.QuizResultResponse$QuizResult">
+            <id property="questionId" column="question_id"/>
+            <result property="isCorrect" column="is_correct"/>
+            <result property="userSelectedId" column="user_selected_id"/>
+            <result property="correctOptionId" column="correct_option_id"/>
+        </collection>
+    </resultMap>
+
+    <select id="findQuizResultByQuizId" resultMap="quizResultResultMap">
+        SELECT
+               pqi.place_quiz_info_id AS quiz_id,
+               stats.total_questions AS total_questions,
+               stats.correct_questions AS correct_questions,
+               q.quiz_id AS question_id,
+               CASE WHEN mqr.is_correct = TRUE THEN TRUE ELSE FALSE END AS is_correct,
+               mqr.answer_id AS user_selected_id,
+               correct_qa.answer_id AS correct_option_id
+          FROM member m
+          JOIN place_quiz_info pqi
+            ON pqi.place_quiz_info_id = #{quizId}
+           AND pqi.difficulty = m.difficulty
+           AND pqi.is_active = TRUE
+          JOIN place_quiz pq
+            ON pq.place_quiz_info_id = pqi.place_quiz_info_id
+          JOIN quiz q
+            ON q.quiz_id = pq.quiz_id
+           AND q.is_active = TRUE
+     LEFT JOIN member_quiz_response mqr
+            ON mqr.member_id = m.member_id
+           AND mqr.quiz_id = q.quiz_id
+     LEFT JOIN quiz_answer correct_qa
+            ON correct_qa.quiz_id = q.quiz_id
+           AND correct_qa.is_correct = TRUE
+          JOIN (
+                SELECT
+                       pqi.place_quiz_info_id,
+                       COUNT(DISTINCT pq.quiz_id) AS total_questions,
+                       COUNT(DISTINCT CASE WHEN mqr.is_correct = TRUE THEN mqr.quiz_id END) AS correct_questions
+                  FROM member m
+                  JOIN place_quiz_info pqi
+                    ON pqi.place_quiz_info_id = #{quizId}
+                   AND pqi.difficulty = m.difficulty
+                   AND pqi.is_active = TRUE
+                  JOIN place_quiz pq
+                    ON pq.place_quiz_info_id = pqi.place_quiz_info_id
+                  JOIN quiz q
+                    ON q.quiz_id = pq.quiz_id
+                   AND q.is_active = TRUE
+             LEFT JOIN member_quiz_response mqr
+                    ON mqr.member_id = m.member_id
+                   AND mqr.quiz_id = pq.quiz_id
+                 WHERE m.member_id = #{memberId}
+              GROUP BY pqi.place_quiz_info_id
+               ) stats
+            ON stats.place_quiz_info_id = pqi.place_quiz_info_id
+         WHERE m.member_id = #{memberId}
+      ORDER BY q.quiz_id
+    </select>
+
 </mapper>
