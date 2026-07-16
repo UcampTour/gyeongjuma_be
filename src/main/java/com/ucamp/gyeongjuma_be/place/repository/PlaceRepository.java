@@ -25,6 +25,8 @@ public interface PlaceRepository {
 
     List<Place> findAll();
 
+    Place findById(@Param("placeId") Long placeId);
+
     List<PlaceSearchResponse> searchPlaces(@Param("search") String search,
                                             @Param("sort") String sort,
                                             @Param("latitude") Double latitude,
