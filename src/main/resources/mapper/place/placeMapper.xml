@@ -123,6 +123,13 @@
         ORDER BY place_id DESC
     </select>
 
+    <select id="findById" resultType="com.ucamp.gyeongjuma_be.place.domain.Place">
+        SELECT place_id AS placeId, map_x AS mapX, map_y AS mapY, radius_meters AS radiusMeters
+        FROM place
+        WHERE place_id = #{placeId}
+          AND is_active = TRUE
+    </select>
+
     <select id="searchPlaces" resultType="com.ucamp.gyeongjuma_be.place.dto.PlaceSearchResponse">
         SELECT
             p.place_id AS place_id,
