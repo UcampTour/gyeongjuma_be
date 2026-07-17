@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ucamp.gyeongjuma_be.mypage.repository.MyPageRepository">
+
+    <!-- 발자취: 방문한 장소 목록 (최근 방문 순) -->
+    <select id="findVisitHistoryByMemberId" resultType="com.ucamp.gyeongjuma_be.mypage.dto.response.VisitHistoryDto">
+        SELECT
+               v.visit_id                            AS visitId,
+               p.place_id                            AS placeId,
+               p.place_name                          AS placeName,
+               CONCAT_WS(' ', p.add1, NULLIF(p.add2, '')) AS address,
+               p.first_image                         AS imageUrl,
+               v.created_at                          AS visitedAt
+          FROM visit v
+          JOIN place p
+            ON p.place_id = v.place_id
+           AND p.is_active = TRUE
+         WHERE v.member_id = #{memberId}
+      ORDER BY v.created_at DESC, v.visit_id DESC
+    </select>
+
+    <!-- 스탬프: 전체 스탬프 목록 + 회원의 획득 여부/획득 일시 -->
+    <select id="findStampsByMemberId" resultType="com.ucamp.gyeongjuma_be.mypage.dto.response.StampDto">
+        SELECT
+               s.stamp_id                            AS stampId,
+               s.stamp_name                          AS stampName,
+               s.description                         AS description,
+               s.requirement                         AS requirement,
+               p.place_id                            AS placeId,
+               p.place_name                          AS placeName,
+               (ms.member_stamp_id IS NOT NULL)      AS isAcquired,
+               ms.created_at                         AS acquiredAt
+          FROM stamp s
+          JOIN place p
+            ON p.place_id = s.place_id
+           AND p.is_active = TRUE
+     LEFT JOIN member_stamp ms
+            ON ms.stamp_id = s.stamp_id
+           AND ms.member_id = #{memberId}
+         WHERE s.is_active = TRUE
+      ORDER BY s.stamp_id
+    </select>
+
+    <!-- 진행도: 회원이 진행 중인 코스별 진행 상황 -->
+    <select id="findCourseProgressByMemberId" resultType="com.ucamp.gyeongjuma_be.mypage.dto.response.CourseProgressDto">
+        SELECT
+               c.course_id                           AS courseId,
+               c.name                                AS courseName,
+               c.place_cnt                           AS placeCnt,
+               mcs.visited_cnt                       AS visitedCnt,
+               mcs.progress_rate                     AS progressRate,
+               mcs.is_completed                      AS isCompleted
+          FROM member_course_state mcs
+          JOIN course c
+            ON c.course_id = mcs.course_id
+           AND c.is_active = TRUE
+         WHERE mcs.member_id = #{memberId}
+      ORDER BY mcs.is_completed ASC, mcs.progress_rate DESC, c.course_id
+    </select>
+
+</mapper>
