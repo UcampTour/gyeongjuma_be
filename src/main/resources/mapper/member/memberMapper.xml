@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ucamp.gyeongjuma_be.member.repository.MemberRepository">
+
+    <sql id="memberColumns">
+        member_id,
+        provider,
+        provider_id,
+        nickname,
+        profile_img_url,
+        locale,
+        difficulty,
+        `point`,
+        distance,
+        visit_place_cnt,
+        refresh_token,
+        refresh_token_expired_at,
+        created_at,
+        updated_at,
+        deleted_at,
+        is_active
+    </sql>
+
+    <select id="findByProviderAndProviderId" resultType="com.ucamp.gyeongjuma_be.member.domain.Member">
+        SELECT <include refid="memberColumns"/>
+          FROM member
+         WHERE provider = #{provider}
+           AND provider_id = #{providerId}
+    </select>
+
+    <select id="findById" resultType="com.ucamp.gyeongjuma_be.member.domain.Member">
+        SELECT <include refid="memberColumns"/>
+          FROM member
+         WHERE member_id = #{memberId}
+           AND is_active = TRUE
+    </select>
+
+    <select id="existsByNickname" resultType="boolean">
+        SELECT EXISTS (
+            SELECT 1
+              FROM member
+             WHERE nickname = #{nickname}
+               AND is_active = TRUE
+        )
+    </select>
+
+    <insert id="insertMember" useGeneratedKeys="true" keyProperty="memberId">
+        INSERT INTO member (provider, provider_id, nickname, profile_img_url, locale, difficulty,
+                            `point`, distance, visit_place_cnt, created_at, updated_at, is_active)
+        VALUES (#{provider}, #{providerId}, #{nickname}, #{profileImgUrl}, #{locale}, #{difficulty},
+                0, 0, 0, #{createdAt}, #{updatedAt}, #{isActive})
+    </insert>
+
+    <update id="updateExtraInfo">
+        UPDATE member
+           SET nickname   = #{nickname},
+               difficulty = #{difficulty},
+               locale     = #{locale},
+               updated_at = NOW()
+         WHERE member_id  = #{memberId}
+           AND is_active  = TRUE
+    </update>
+
+    <update id="updateRefreshToken">
+        UPDATE member
+           SET refresh_token            = #{refreshToken},
+               refresh_token_expired_at = #{refreshTokenExpiredAt},
+               updated_at               = NOW()
+         WHERE member_id                = #{memberId}
+    </update>
+
+    <!-- 재가입 시 신규 회원처럼 추가 정보(닉네임)를 다시 받도록 nickname을 비운다
+         (탈퇴 시점에 비우지 못한 기존 탈퇴 회원 데이터도 여기서 처리됨) -->
+    <update id="reactivateMember">
+        UPDATE member
+           SET is_active  = TRUE,
+               deleted_at = NULL,
+               nickname   = NULL,
+               updated_at = NOW()
+         WHERE member_id  = #{memberId}
+    </update>
+
+    <!-- 탈퇴 시 닉네임을 비워 다른 회원이 사용할 수 있게 하고, 재가입 시 신규 온보딩을 타게 한다 -->
+    <update id="softDeleteById">
+        UPDATE member
+           SET is_active                = FALSE,
+               deleted_at               = NOW(),
+               nickname                 = NULL,
+               refresh_token            = NULL,
+               refresh_token_expired_at = NULL,
+               updated_at               = NOW()
+         WHERE member_id                = #{memberId}
+           AND is_active                = TRUE
+    </update>
+
+</mapper>
