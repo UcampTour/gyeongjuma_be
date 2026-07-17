@@ -58,6 +58,7 @@
         UPDATE member
            SET nickname   = #{nickname},
                difficulty = #{difficulty},
+               locale     = #{locale},
                updated_at = NOW()
          WHERE member_id  = #{memberId}
            AND is_active  = TRUE
@@ -71,18 +72,23 @@
          WHERE member_id                = #{memberId}
     </update>
 
+    <!-- 재가입 시 신규 회원처럼 추가 정보(닉네임)를 다시 받도록 nickname을 비운다
+         (탈퇴 시점에 비우지 못한 기존 탈퇴 회원 데이터도 여기서 처리됨) -->
     <update id="reactivateMember">
         UPDATE member
            SET is_active  = TRUE,
                deleted_at = NULL,
+               nickname   = NULL,
                updated_at = NOW()
          WHERE member_id  = #{memberId}
     </update>
 
+    <!-- 탈퇴 시 닉네임을 비워 다른 회원이 사용할 수 있게 하고, 재가입 시 신규 온보딩을 타게 한다 -->
     <update id="softDeleteById">
         UPDATE member
            SET is_active                = FALSE,
                deleted_at               = NOW(),
+               nickname                 = NULL,
                refresh_token            = NULL,
                refresh_token_expired_at = NULL,
                updated_at               = NOW()

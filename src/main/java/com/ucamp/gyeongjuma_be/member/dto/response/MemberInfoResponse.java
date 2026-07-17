@@ -7,6 +7,7 @@ public record MemberInfoResponse(
         Long memberId,
         String nickname,
         String profileImage,
-        String difficulty
+        String difficulty,
+        String locale
 ) {
 }

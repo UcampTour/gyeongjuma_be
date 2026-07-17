@@ -11,6 +11,8 @@ public interface MemberService {
 
     LoginResponse login(LoginRequest request);
 
+    MemberInfoResponse getMyInfo(Long memberId);
+
     MemberInfoResponse registerExtraInfo(Long memberId, ExtraInfoRequest request);
 
     NicknameCheckResponse checkNickname(String nickname);
