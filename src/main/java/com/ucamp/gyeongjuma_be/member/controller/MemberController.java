@@ -40,7 +40,18 @@ public class MemberController {
     }
 
     /**
-     * 2. 추가 정보 등록 (닉네임, 퀴즈 난이도)
+     * 1-1. 내 정보 조회 (앱 시작 시 토큰 유효성 확인용 — 인터셉터가 토큰을 검증하고,
+     *      유효하면 사용자 정보를 반환한다. 토큰이 무효/만료면 401)
+     */
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<MemberInfoResponse>> getMyInfo(
+            @RequestAttribute(AuthInterceptor.MEMBER_ID_ATTRIBUTE) Long memberId) {
+        MemberInfoResponse response = memberService.getMyInfo(memberId);
+        return ResponseEntity.ok(ApiResponse.success("회원 정보 조회에 성공했습니다.", response));
+    }
+
+    /**
+     * 2. 추가 정보 등록 (닉네임, 퀴즈 난이도, 언어)
      */
     @PatchMapping("/extra-info")
     public ResponseEntity<ApiResponse<MemberInfoResponse>> registerExtraInfo(

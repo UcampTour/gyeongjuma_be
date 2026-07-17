@@ -49,9 +49,10 @@ public class MemberServiceImpl implements MemberService {
         Member member = memberRepository.findByProviderAndProviderId(provider, userInfo.providerId());
         boolean isNewMember = (member == null);
 
-        // 탈퇴했던 회원이 다시 로그인하면 재활성화
+        // 탈퇴했던 회원이 다시 로그인하면 재활성화하되, 신규 회원처럼 추가 정보를 다시 받는다
         if (member != null && Boolean.FALSE.equals(member.getIsActive())) {
             memberRepository.reactivateMember(member.getMemberId());
+            member.setNickname(null);
         }
 
         if (isNewMember) {
@@ -60,7 +61,7 @@ public class MemberServiceImpl implements MemberService {
                     .providerId(userInfo.providerId())
                     .profileImgUrl(userInfo.profileImage() != null ? userInfo.profileImage() : "")
                     .locale("ko")
-                    .difficulty("EASY")
+                    .difficulty("NORMAL")
                     .build();
             memberRepository.insertMember(member);
         }
@@ -82,6 +83,19 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
+    public MemberInfoResponse getMyInfo(Long memberId) {
+        Member member = getActiveMember(memberId);
+
+        return MemberInfoResponse.builder()
+                .memberId(member.getMemberId())
+                .nickname(member.getNickname())
+                .profileImage(member.getProfileImgUrl())
+                .difficulty(member.getDifficulty())
+                .locale(member.getLocale())
+                .build();
+    }
+
+    @Override
     @Transactional
     public MemberInfoResponse registerExtraInfo(Long memberId, ExtraInfoRequest request) {
         Member member = getActiveMember(memberId);
@@ -92,13 +106,15 @@ public class MemberServiceImpl implements MemberService {
             throw new CustomException(ErrorCode.DUPLICATE_NICKNAME);
         }
 
-        memberRepository.updateExtraInfo(memberId, request.nickname(), request.difficultyOrDefault());
+        memberRepository.updateExtraInfo(memberId, request.nickname(),
+                request.difficultyOrDefault(), request.localeOrDefault());
 
         return MemberInfoResponse.builder()
                 .memberId(memberId)
                 .nickname(request.nickname())
                 .profileImage(member.getProfileImgUrl())
                 .difficulty(request.difficultyOrDefault())
+                .locale(request.localeOrDefault())
                 .build();
     }
 

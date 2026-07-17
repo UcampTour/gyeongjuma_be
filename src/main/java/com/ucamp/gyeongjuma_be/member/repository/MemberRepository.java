@@ -20,7 +20,8 @@ public interface MemberRepository {
 
     int updateExtraInfo(@Param("memberId") Long memberId,
                         @Param("nickname") String nickname,
-                        @Param("difficulty") String difficulty);
+                        @Param("difficulty") String difficulty,
+                        @Param("locale") String locale);
 
     int updateRefreshToken(@Param("memberId") Long memberId,
                            @Param("refreshToken") String refreshToken,
