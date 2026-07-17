@@ -37,7 +37,7 @@ public class MyPageServiceImpl implements MyPageService {
                 .difficulty(member.getDifficulty())
                 .point(member.getPoint())
                 .distance(member.getDistance())
-                .visitPlaceCnt(member.getVisitPlaceCnt())
+                .visitPlaceCnt(myPageRepository.countVisitedPlacesByMemberId(memberId))
                 .build();
     }
 

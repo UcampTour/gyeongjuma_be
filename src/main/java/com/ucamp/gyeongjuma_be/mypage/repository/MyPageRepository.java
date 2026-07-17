@@ -13,6 +13,8 @@ public interface MyPageRepository {
 
     List<VisitHistoryDto> findVisitHistoryByMemberId(@Param("memberId") Long memberId);
 
+    long countVisitedPlacesByMemberId(@Param("memberId") Long memberId);
+
     List<StampDto> findStampsByMemberId(@Param("memberId") Long memberId);
 
     List<CourseProgressDto> findCourseProgressByMemberId(@Param("memberId") Long memberId);
