@@ -172,9 +172,10 @@
                  AND CAST(cl.score AS DECIMAL(5, 2)) BETWEEN 61 AND 100 THEN '혼잡'
                 ELSE NULL
             END AS congestion,
-            '정보 없음' AS operationStatus, <!-- 추후 구현 예정 -->
+            p.usetime AS operationStatus, <!-- 추후 구현 예정 -->
+            p.parking AS parking,
             CASE WHEN v.place_id IS NULL THEN FALSE ELSE TRUE END AS isVisited,
-            p.first_image AS imageUrl
+            NULLIF(p.first_image, '') AS imageUrl
         FROM place p
         LEFT JOIN visit v
           ON v.place_id = p.place_id
