@@ -20,8 +20,10 @@ public class PlaceSearchResponse {
     private Double distance;
     private String congestion;
     private String operationStatus;
+    private String operationHour;
     private String add1;
     private String add2;
+    private String parking;
 
     @JsonProperty("isVisited")
     private Boolean isVisited;
