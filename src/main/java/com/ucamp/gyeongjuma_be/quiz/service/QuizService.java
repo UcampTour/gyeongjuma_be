@@ -9,11 +9,11 @@ import com.ucamp.gyeongjuma_be.quiz.dto.response.QuizResultResponse;
 public interface QuizService {
     QuizListResponse getQuizList(Long memberId);
 
-    QuizDetailResponse getQuizDetail(Long quizId, Long memberId);
+    QuizDetailResponse getQuizDetail(Long placeQuizInfoId, Long memberId);
 
-    QuizDetailResponse retryQuiz(Long quizId, Long memberId);
+    QuizDetailResponse retryQuiz(Long placeQuizInfoId, Long memberId);
 
-    QuizSubmitResponse submitQuiz(Long quizId, Long memberId, QuizSubmitRequest request);
+    QuizSubmitResponse submitQuiz(Long placeQuizInfoId, Long memberId, QuizSubmitRequest request);
 
-    QuizResultResponse getQuizResult(Long quizId, Long memberId);
+    QuizResultResponse getQuizResult(Long placeQuizInfoId, Long memberId);
 }
