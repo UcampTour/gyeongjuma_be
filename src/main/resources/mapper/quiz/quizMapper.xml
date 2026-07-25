@@ -58,6 +58,7 @@
         <result property="imageUrl" column="image_url"/>
         <result property="title" column="title"/>
         <result property="description" column="description"/>
+        <result property="totalQuestions" column="total_questions"/>
         <result property="correctQuestions" column="correct_questions"/>
         <result property="lastQuestionIndex" column="last_question_index"/>
         <result property="quizStatus" column="quiz_status"/>
@@ -80,6 +81,7 @@
                p.first_image AS image_url,
                pqi.title AS title,
                pqi.description AS description,
+               stats.total_questions AS total_questions,
                stats.correct_questions AS correct_questions,
                CASE
                    WHEN stats.is_visited = 0 THEN 'LOCKED'
