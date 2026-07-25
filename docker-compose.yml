@@ -11,7 +11,6 @@ services:
       - DB_PASSWORD=${DB_PASSWORD}
       - JWT_SECRET=${JWT_SECRET}
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
-      - TOUR_API_KEY=${TOUR_API_KEY}
       - CORS_ALLOWED_HOST=${CORS_ALLOWED_HOST}
     ports:
       - "8080:8080"
