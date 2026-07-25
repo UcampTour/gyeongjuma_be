@@ -31,37 +31,37 @@ public class QuizController {
         return ResponseEntity.ok(apiResponse);
     }
 
-    @GetMapping("/{quizId}")
-    public ResponseEntity<ApiResponse<QuizDetailResponse>> getQuizDetail(@PathVariable Long quizId) {
+    @GetMapping("/{placeQuizInfoId}")
+    public ResponseEntity<ApiResponse<QuizDetailResponse>> getQuizDetail(@PathVariable Long placeQuizInfoId) {
         Long memberId = 1L;
-        QuizDetailResponse response = quizService.getQuizDetail(quizId, memberId);
+        QuizDetailResponse response = quizService.getQuizDetail(placeQuizInfoId, memberId);
         ApiResponse<QuizDetailResponse> apiResponse = ApiResponse.success("퀴즈 상세 정보 조회 성공", response);
         return ResponseEntity.ok(apiResponse);
     }
 
-    @PostMapping("/{quizId}/retry")
-    public ResponseEntity<ApiResponse<QuizDetailResponse>> retryQuiz(@PathVariable Long quizId) {
+    @PostMapping("/{placeQuizInfoId}/retry")
+    public ResponseEntity<ApiResponse<QuizDetailResponse>> retryQuiz(@PathVariable Long placeQuizInfoId) {
         Long memberId = 1L;
-        QuizDetailResponse response = quizService.retryQuiz(quizId, memberId);
+        QuizDetailResponse response = quizService.retryQuiz(placeQuizInfoId, memberId);
         ApiResponse<QuizDetailResponse> apiResponse = ApiResponse.success("퀴즈 초기화 성공", response);
         return ResponseEntity.ok(apiResponse);
     }
 
-    @PostMapping("/{quizId}/submit")
+    @PostMapping("/{placeQuizInfoId}/submit")
     public ResponseEntity<ApiResponse<QuizSubmitResponse>> submitQuiz(
-            @PathVariable Long quizId,
+            @PathVariable Long placeQuizInfoId,
             @RequestBody QuizSubmitRequest request
     ) {
         Long memberId = 1L;
-        QuizSubmitResponse response = quizService.submitQuiz(quizId, memberId, request);
+        QuizSubmitResponse response = quizService.submitQuiz(placeQuizInfoId, memberId, request);
         ApiResponse<QuizSubmitResponse> apiResponse = ApiResponse.success("퀴즈 답안 제출 성공", response);
         return ResponseEntity.ok(apiResponse);
     }
 
-    @GetMapping("/{quizId}/result")
-    public ResponseEntity<ApiResponse<QuizResultResponse>> getQuizResult(@PathVariable Long quizId) {
+    @GetMapping("/{placeQuizInfoId}/result")
+    public ResponseEntity<ApiResponse<QuizResultResponse>> getQuizResult(@PathVariable Long placeQuizInfoId) {
         Long memberId = 1L;
-        QuizResultResponse response = quizService.getQuizResult(quizId, memberId);
+        QuizResultResponse response = quizService.getQuizResult(placeQuizInfoId, memberId);
         ApiResponse<QuizResultResponse> apiResponse = ApiResponse.success("퀴즈 결과 조회 성공", response);
         return ResponseEntity.ok(apiResponse);
     }

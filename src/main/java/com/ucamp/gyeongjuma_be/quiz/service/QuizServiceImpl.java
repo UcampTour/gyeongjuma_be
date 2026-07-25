@@ -28,28 +28,37 @@ public class QuizServiceImpl implements QuizService {
     public QuizListResponse getQuizList(Long memberId) {
 
         List<QuizListItem> quizList = quizRepository.findQuizList(memberId);
+        int totalQuestions = quizList.stream()
+                .mapToInt(quiz -> quiz.getTotalQuestions() == null ? 0 : quiz.getTotalQuestions())
+                .sum();
+        int solvedQuestions = quizList.stream()
+                .mapToInt(quiz -> quiz.getSolvedQuestions() == null ? 0 : quiz.getSolvedQuestions())
+                .sum();
+
         return QuizListResponse.builder()
+                .totalQuestions(totalQuestions)
+                .solvedQuestions(solvedQuestions)
                 .quizList(quizList)
                 .build();
     }
 
     @Override
-    public QuizDetailResponse getQuizDetail(Long quizId, Long memberId) {
-        return quizRepository.findQuizDetailByQuizId(quizId, memberId);
+    public QuizDetailResponse getQuizDetail(Long placeQuizInfoId, Long memberId) {
+        return quizRepository.findQuizDetailByPlaceQuizInfoId(placeQuizInfoId, memberId);
     }
 
     @Override
     @Transactional
-    public QuizDetailResponse retryQuiz(Long quizId, Long memberId) {
-        quizRepository.deleteQuizResponsesByQuizId(quizId, memberId);
-        return quizRepository.findQuizDetailByQuizId(quizId, memberId);
+    public QuizDetailResponse retryQuiz(Long placeQuizInfoId, Long memberId) {
+        quizRepository.deleteQuizResponsesByPlaceQuizInfoId(placeQuizInfoId, memberId);
+        return quizRepository.findQuizDetailByPlaceQuizInfoId(placeQuizInfoId, memberId);
     }
 
     @Override
     @Transactional
-    public QuizSubmitResponse submitQuiz(Long quizId, Long memberId, QuizSubmitRequest request) {
+    public QuizSubmitResponse submitQuiz(Long placeQuizInfoId, Long memberId, QuizSubmitRequest request) {
         QuizSubmitResponse response = quizRepository.findSubmitResult(
-                quizId, request.getQuestionId(), request.getSelectedOptionId(), memberId);
+                placeQuizInfoId, request.getQuestionId(), request.getSelectedOptionId(), memberId);
 
         if (response == null) {
             throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
@@ -75,8 +84,8 @@ public class QuizServiceImpl implements QuizService {
     }
 
     @Override
-    public QuizResultResponse getQuizResult(Long quizId, Long memberId) {
-        QuizResultResponse response = quizRepository.findQuizResultByQuizId(quizId, memberId);
+    public QuizResultResponse getQuizResult(Long placeQuizInfoId, Long memberId) {
+        QuizResultResponse response = quizRepository.findQuizResultByPlaceQuizInfoId(placeQuizInfoId, memberId);
 
         if (response == null) {
             throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
