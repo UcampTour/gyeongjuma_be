@@ -1,0 +1,51 @@
+name: Gyeongjuma CI/CD
+
+on:
+  push:
+    branches: [ "main" ] # main 브랜치에 push 되면 실행
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 1. 도커 허브 로그인
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # 2. 백엔드 이미지 빌드 및 푸시
+      - name: Backend Image Build & Push
+        uses: docker/build-push-action@v5
+        with:
+          context: . # 백엔드 소스가 프로젝트 최상단에 있다면 '.'으로 설정
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/gyeongjuma-back:latest
+
+  deploy:
+    needs: build-and-push # 빌드가 성공해야 배포 시작
+    runs-on: ubuntu-latest
+    steps:
+      # 3. Azure 서버에 접속해서 새 이미지로 교체
+      - name: Deploy to Azure via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.AZURE_HOST }}
+          username: ${{ secrets.AZURE_USER }}
+          key: ${{ secrets.AZURE_SSH_KEY }}
+          script: |
+            # 서버의 프로젝트 폴더로 이동
+            cd ~/app
+            
+            # 새 이미지 가져오기
+            sudo docker compose pull
+            
+            # 컨테이너 재시작
+            sudo docker compose up -d --force-recreate
+            
+            # 안 쓰는 옛날 이미지 삭제 (서버 용량 관리)
+            sudo docker image prune -f
