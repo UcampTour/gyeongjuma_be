@@ -20,7 +20,7 @@ public enum ErrorCode {
     ALREADY_WITHDRAWN_MEMBER(HttpStatus.BAD_REQUEST, "M004", "이미 탈퇴한 회원입니다."),
 
     // Auth (인증/인가)
-    UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "A001", "인증이 필요합니다."),
+    UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "A001", "인증이 필요합니다@@@@ test."),
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "A002", "유효하지 않은 토큰입니다."),
     EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "A003", "만료된 토큰입니다."),
     INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "A004", "유효하지 않은 리프레시 토큰입니다."),
