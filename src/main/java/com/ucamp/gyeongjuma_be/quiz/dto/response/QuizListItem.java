@@ -5,7 +5,7 @@ import lombok.Data;
 @Data
 public class QuizListItem {
 
-    private Long quizId;
+    private Long placeQuizInfoId;
     private String quizTitle;
     private String description;
     private String imageUrl;

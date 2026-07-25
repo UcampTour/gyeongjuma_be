@@ -8,5 +8,7 @@ import java.util.List;
 @Builder
 public class QuizListResponse {
 
+    private Integer totalQuestions;
+    private Integer solvedQuestions;
     private List<QuizListItem> quizList;
 }

@@ -13,7 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 public class QuizDetailResponse {
 
-    private Long quizId;
+    private Long placeQuizInfoId;
     private Long placeId;
     private String imageUrl;
     private String title;

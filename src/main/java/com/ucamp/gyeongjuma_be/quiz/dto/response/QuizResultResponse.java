@@ -7,7 +7,7 @@ import java.util.List;
 @Data
 public class QuizResultResponse {
 
-    private Long quizId;
+    private Long placeQuizInfoId;
     private Integer totalQuestions;
     private Integer correctQuestions;
     private Integer points;
