@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  # 경주마 백엔드 컨테이너 설정
+  gyeongjuma-back:
+    image: ${DOCKER_USERNAME}/gyeongjuma-back:latest
+    container_name: gyeongjuma-back
+    environment:
+      - DB_URL=${DB_URL}
+      - DB_ID=${DB_ID}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - TOUR_API_KEY=${TOUR_API_KEY}
+      - CORS_ALLOWED_HOST=${CORS_ALLOWED_HOST}
+    ports:
+      - "8080:8080"
+    restart: always
