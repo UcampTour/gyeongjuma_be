@@ -206,12 +206,17 @@
                 WHEN p.parking LIKE '%불가%' THEN 'UNAVAILABLE'
                 ELSE 'AVAILABLE'
             END AS parking,
-            CASE WHEN v.place_id IS NULL THEN FALSE ELSE TRUE END AS isVisited,
+            CASE
+                WHEN EXISTS (
+                    SELECT 1
+                    FROM visit v
+                    WHERE v.place_id = p.place_id
+                      AND v.member_id = #{memberId}
+                ) THEN TRUE
+                ELSE FALSE
+            END AS isVisited,
             NULLIF(p.first_image, '') AS imageUrl
         FROM place p
-        LEFT JOIN visit v
-          ON v.place_id = p.place_id
-         AND v.member_id = #{memberId}
         LEFT JOIN place_content pc
           ON p.place_id = pc.place_id
          AND pc.difficulty = (select difficulty from member where member_id = #{memberId})
@@ -226,7 +231,15 @@
         ORDER BY
         <choose>
             <when test="sort == 'unvisited'">
-                CASE WHEN v.place_id IS NULL THEN 0 ELSE 1 END ASC,
+                CASE
+                    WHEN EXISTS (
+                        SELECT 1
+                        FROM visit v
+                        WHERE v.place_id = p.place_id
+                          AND v.member_id = #{memberId}
+                    ) THEN 1
+                    ELSE 0
+                END ASC,
                 p.place_name ASC
             </when>
             <when test="sort == 'congestion'">
