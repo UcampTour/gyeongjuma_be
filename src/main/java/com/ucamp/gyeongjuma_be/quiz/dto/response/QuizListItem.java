@@ -12,4 +12,5 @@ public class QuizListItem {
     private Integer totalQuestions;
     private Integer solvedQuestions;
     private String quizStatus;
+    private Long placeId;
 }
