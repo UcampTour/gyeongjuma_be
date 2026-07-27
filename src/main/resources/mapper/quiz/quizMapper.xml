@@ -13,6 +13,7 @@
                base.image_url AS imageUrl,
                base.total_questions AS totalQuestions,
                base.solved_questions AS solvedQuestions,
+               base.place_id AS placeId,
                CASE
                    WHEN base.is_visited = 0 THEN 'LOCKED'
                    WHEN base.solved_questions = base.total_questions THEN 'COMPLETED'
@@ -24,6 +25,7 @@
                        pqi.place_quiz_info_id AS place_quiz_info_id,
                        pqi.title AS quiz_title,
                        pqi.description AS description,
+                       pqi.place_id AS place_id,
                        p.first_image AS image_url,
                        COUNT(DISTINCT pq.quiz_id) AS total_questions,
                        COUNT(DISTINCT mqr.quiz_id) AS solved_questions,
