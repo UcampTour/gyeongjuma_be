@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/quizzes")
+@RequestMapping("/api/quizzes")
 @RequiredArgsConstructor
 public class QuizController {
 

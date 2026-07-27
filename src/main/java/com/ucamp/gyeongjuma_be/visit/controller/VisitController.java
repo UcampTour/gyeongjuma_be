@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/visit")
+@RequestMapping("/api/visit")
 @RequiredArgsConstructor
 public class VisitController {
     private final VisitService visitService;
