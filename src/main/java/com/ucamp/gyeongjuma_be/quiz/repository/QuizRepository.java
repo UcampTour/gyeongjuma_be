@@ -17,11 +17,11 @@ public interface QuizRepository {
     // 퀴즈 목록 조회
     List<QuizListItem> findQuizList(Long memberId);
     // 퀴즈 상세 조회
-    QuizDetailResponse findQuizDetailByQuizId(@Param("quizId") Long quizId, @Param("memberId") Long memberId);
+    QuizDetailResponse findQuizDetailByPlaceQuizInfoId(@Param("placeQuizInfoId") Long placeQuizInfoId, @Param("memberId") Long memberId);
     // 퀴즈 새로 풀기
-    void deleteQuizResponsesByQuizId(@Param("quizId") Long quizId, @Param("memberId") Long memberId);
+    void deleteQuizResponsesByPlaceQuizInfoId(@Param("placeQuizInfoId") Long placeQuizInfoId, @Param("memberId") Long memberId);
 
-    QuizSubmitResponse findSubmitResult(@Param("quizId") Long quizId,
+    QuizSubmitResponse findSubmitResult(@Param("placeQuizInfoId") Long placeQuizInfoId,
                                         @Param("questionId") Long questionId,
                                         @Param("selectedOptionId") Long selectedOptionId,
                                         @Param("memberId") Long memberId);
@@ -39,5 +39,5 @@ public interface QuizRepository {
 
     void increaseMemberPoint(@Param("memberId") Long memberId, @Param("point") int point);
 
-    QuizResultResponse findQuizResultByQuizId(@Param("quizId") Long quizId, @Param("memberId") Long memberId);
+    QuizResultResponse findQuizResultByPlaceQuizInfoId(@Param("placeQuizInfoId") Long placeQuizInfoId, @Param("memberId") Long memberId);
 }

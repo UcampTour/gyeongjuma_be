@@ -5,11 +5,12 @@ import lombok.Data;
 @Data
 public class QuizListItem {
 
-    private Long quizId;
+    private Long placeQuizInfoId;
     private String quizTitle;
     private String description;
     private String imageUrl;
     private Integer totalQuestions;
     private Integer solvedQuestions;
     private String quizStatus;
+    private Long placeId;
 }

@@ -1,0 +1,58 @@
+name: Gyeongjuma CI/CD
+
+on:
+  push:
+    branches: [ "main" ] # main 브랜치에 push 되면 실행
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 1. 도커 허브 로그인
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # 2. 백엔드 이미지 빌드 및 푸시
+      - name: Backend Image Build & Push
+        uses: docker/build-push-action@v5
+        with:
+          context: . # 백엔드 소스가 프로젝트 최상단에 있다면 '.'으로 설정
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/gyeongjuma-back:latest
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      # (1) 깃허브에 있는 최신 소스(docker-compose.yml 등)를 액션 가상환경으로 받아오기
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # (2) SCP(파일 전송)를 이용해 로컬의 docker-compose.yml을 Azure 서버의 ~/app 폴더로 쏙 집어넣기
+      - name: Copy docker-compose.yml to Azure
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.AZURE_HOST }}
+          username: ${{ secrets.AZURE_USER }}
+          key: ${{ secrets.AZURE_SSH_KEY }}
+          source: "docker-compose.yml"
+          target: "~/app"
+
+      # (3) Azure 서버에 접속해서 새 이미지로 교체 및 실행
+      - name: Deploy to Azure via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.AZURE_HOST }}
+          username: ${{ secrets.AZURE_USER }}
+          key: ${{ secrets.AZURE_SSH_KEY }}
+          script: |
+            cd ~/app
+            sudo docker compose pull
+            sudo docker compose up -d --force-recreate
+            sudo docker image prune -f
