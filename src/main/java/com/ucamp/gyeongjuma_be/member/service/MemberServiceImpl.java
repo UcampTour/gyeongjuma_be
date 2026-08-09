@@ -8,15 +8,16 @@ import com.ucamp.gyeongjuma_be.common.exception.ErrorCode;
 import com.ucamp.gyeongjuma_be.member.domain.Member;
 import com.ucamp.gyeongjuma_be.member.dto.request.ExtraInfoRequest;
 import com.ucamp.gyeongjuma_be.member.dto.request.LoginRequest;
-import com.ucamp.gyeongjuma_be.member.dto.response.LoginResponse;
+import com.ucamp.gyeongjuma_be.member.dto.response.LoginResult;
 import com.ucamp.gyeongjuma_be.member.dto.response.MemberInfoResponse;
 import com.ucamp.gyeongjuma_be.member.dto.response.NicknameCheckResponse;
-import com.ucamp.gyeongjuma_be.member.dto.response.TokenResponse;
+import com.ucamp.gyeongjuma_be.member.dto.response.TokenResult;
 import com.ucamp.gyeongjuma_be.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.List;
 
@@ -28,10 +29,14 @@ public class MemberServiceImpl implements MemberService {
     private final MemberRepository memberRepository;
     private final List<SocialTokenVerifier> socialTokenVerifiers;
     private final JwtTokenProvider jwtTokenProvider;
+    private final TransactionTemplate transactionTemplate;
 
+    /**
+     * 소셜 서버 검증(외부 HTTP)은 트랜잭션 밖에서 수행한다.
+     * 트랜잭션 안에서 호출하면 응답을 기다리는 내내 DB 커넥션을 붙잡고 있어 커넥션 풀이 고갈된다.
+     */
     @Override
-    @Transactional
-    public LoginResponse login(LoginRequest request) {
+    public LoginResult login(LoginRequest request) {
         String provider = request.providerOrDefault();
 
         SocialTokenVerifier verifier = socialTokenVerifiers.stream()
@@ -46,6 +51,11 @@ public class MemberServiceImpl implements MemberService {
 
         SocialUserInfo userInfo = verifier.verify(token);
 
+        // 여기서부터가 DB 작업 — 이 구간만 트랜잭션으로 묶는다
+        return transactionTemplate.execute(status -> issueTokensFor(provider, userInfo));
+    }
+
+    private LoginResult issueTokensFor(String provider, SocialUserInfo userInfo) {
         Member member = memberRepository.findByProviderAndProviderId(provider, userInfo.providerId());
         boolean isNewMember = (member == null);
 
@@ -72,7 +82,7 @@ public class MemberServiceImpl implements MemberService {
                 jwtTokenProvider.getRefreshTokenExpiredAt());
 
         // 닉네임(추가 정보)을 아직 등록하지 않았다면 신규 회원으로 취급
-        return LoginResponse.builder()
+        return LoginResult.builder()
                 .memberId(member.getMemberId())
                 .email(userInfo.email())
                 .nickname(member.getNickname())
@@ -126,7 +136,7 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     @Transactional
-    public TokenResponse reissue(String refreshToken) {
+    public TokenResult reissue(String refreshToken) {
         if (!jwtTokenProvider.isRefreshToken(refreshToken)) {
             throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
         }
@@ -144,7 +154,7 @@ public class MemberServiceImpl implements MemberService {
         memberRepository.updateRefreshToken(memberId, newRefreshToken,
                 jwtTokenProvider.getRefreshTokenExpiredAt());
 
-        return TokenResponse.builder()
+        return TokenResult.builder()
                 .accessToken(newAccessToken)
                 .refreshToken(newRefreshToken)
                 .build();

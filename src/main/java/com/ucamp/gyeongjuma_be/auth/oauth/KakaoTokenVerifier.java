@@ -2,6 +2,7 @@ package com.ucamp.gyeongjuma_be.auth.oauth;
 
 import com.ucamp.gyeongjuma_be.common.exception.CustomException;
 import com.ucamp.gyeongjuma_be.common.exception.ErrorCode;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
@@ -17,11 +18,12 @@ import java.util.Map;
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class KakaoTokenVerifier implements SocialTokenVerifier {
 
     private static final String USER_INFO_URL = "https://kapi.kakao.com/v2/user/me";
 
-    private final RestClient restClient = RestClient.create();
+    private final RestClient restClient;
 
     @Override
     public String provider() {

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ucamp.gyeongjuma_be.admin.repository.AdminPlaceRepository">
+
+    <sql id="placeSearchWhere">
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (p.place_name LIKE CONCAT('%', #{keyword}, '%')
+                     OR p.add1 LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="isActive != null">
+                AND p.is_active = #{isActive}
+            </if>
+        </where>
+    </sql>
+
+    <sql id="placeColumns">
+        p.place_id        AS placeId,
+        p.place_name      AS placeName,
+        p.add1            AS add1,
+        p.add2            AS add2,
+        p.tel             AS tel,
+        p.content_type_id AS contentTypeId,
+        p.map_x           AS mapX,
+        p.map_y           AS mapY,
+        p.first_image     AS firstImage,
+        p.radius_meters   AS radiusMeters,
+        p.is_active       AS isActive,
+        p.created_at      AS createdAt,
+        p.deleted_at      AS deletedAt,
+        (SELECT COUNT(*) FROM visit v WHERE v.place_id = p.place_id)                                  AS visitCnt,
+        (SELECT COUNT(*) FROM place_quiz_info pqi
+          WHERE pqi.place_id = p.place_id AND pqi.is_active = TRUE)                                   AS quizSetCnt
+    </sql>
+
+    <select id="findPlaces" resultType="com.ucamp.gyeongjuma_be.admin.dto.response.AdminPlaceDto">
+        SELECT <include refid="placeColumns"/>
+          FROM place p
+        <include refid="placeSearchWhere"/>
+      ORDER BY p.created_at DESC, p.place_id DESC
+         LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <select id="countPlaces" resultType="long">
+        SELECT COUNT(*)
+          FROM place p
+        <include refid="placeSearchWhere"/>
+    </select>
+
+    <select id="findPlaceById" resultType="com.ucamp.gyeongjuma_be.admin.dto.response.AdminPlaceDto">
+        SELECT <include refid="placeColumns"/>
+          FROM place p
+         WHERE p.place_id = #{placeId}
+    </select>
+
+    <insert id="insertPlace">
+        INSERT INTO place (place_name, add1, add2, tel, content_type_id, map_x, map_y,
+                           first_image, lcls_systm1, lcls_systm2, lcls_systm3, radius_meters,
+                           created_at, updated_at, is_active)
+        VALUES (#{req.placeName}, #{req.add1}, #{req.add2OrEmpty}, #{req.telOrEmpty},
+                #{req.contentTypeIdOrDefault}, #{req.mapXOrZero}, #{req.mapYOrZero},
+                #{req.firstImageOrEmpty}, '', '', '', #{req.radiusMetersOrDefault},
+                #{createdAt}, #{createdAt}, TRUE)
+    </insert>
+
+    <select id="findLastInsertedPlaceId" resultType="long">
+        SELECT LAST_INSERT_ID()
+    </select>
+
+    <!-- 물리 삭제는 FK(visit·place_content·place_image·place_quiz_info) 때문에 불가하므로 소프트 삭제 -->
+    <update id="softDeletePlace">
+        UPDATE place
+           SET is_active  = FALSE,
+               deleted_at = #{deletedAt},
+               updated_at = #{deletedAt}
+         WHERE place_id   = #{placeId}
+           AND is_active  = TRUE
+    </update>
+
+    <update id="restorePlace">
+        UPDATE place
+           SET is_active  = TRUE,
+               deleted_at = NULL,
+               updated_at = #{updatedAt}
+         WHERE place_id   = #{placeId}
+           AND is_active  = FALSE
+    </update>
+
+</mapper>
