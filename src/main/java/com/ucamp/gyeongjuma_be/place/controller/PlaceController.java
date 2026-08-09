@@ -1,5 +1,6 @@
 package com.ucamp.gyeongjuma_be.place.controller;
 
+import com.ucamp.gyeongjuma_be.auth.AuthInterceptor;
 import com.ucamp.gyeongjuma_be.common.dto.ApiResponse;
 import com.ucamp.gyeongjuma_be.place.dto.PlaceListResponse;
 import com.ucamp.gyeongjuma_be.place.dto.PlaceSearchResponse;
@@ -11,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/place")
+@RequestMapping("/api/place")
 @RequiredArgsConstructor
 public class PlaceController {
 
@@ -55,10 +56,9 @@ public class PlaceController {
             @RequestParam(required = false) String search,
             @RequestParam(required = false, defaultValue = "distance") String sort,
             @RequestParam Double latitude,
-            @RequestParam Double longitude
+            @RequestParam Double longitude,
+            @RequestAttribute(AuthInterceptor.MEMBER_ID_ATTRIBUTE) Long memberId
     ) {
-        //임시로 memberId = 1로 사용
-        Long memberId = 1L;
         List<PlaceSearchResponse> responses = placeService.searchPlaces(memberId, search, sort, latitude, longitude);
 
         ApiResponse<List<PlaceSearchResponse>> apiResponse =

@@ -16,16 +16,21 @@ public class WebConfig implements WebMvcConfigurer {
     private final AuthInterceptor authInterceptor;
     private final AdminInterceptor adminInterceptor;
 
-    /** 허용할 프론트엔드 오리진 (개발/배포 주소를 properties에서 관리) */
-    @Value("${app.cors.allowed-origins}")
-    private String[] allowedOrigins;
+    /**
+     * 허용할 프론트엔드 오리진. 배포 서버는 환경변수 CORS_ALLOWED_HOST로 주입한다.
+     * 쉼표로 구분해 여러 개를 넣을 수 있다. (로컬 개발용 기본값 포함)
+     */
+    @Value("${cors.allowed.host}")
+    private String[] allowedHosts;
 
+    // 1. 인터셉터 설정
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         // 1순위: 토큰 검증 후 memberId 주입
         registry.addInterceptor(authInterceptor)
                 .order(1)
-                .addPathPatterns("/api/members/**", "/api/mypage/**", "/api/admin/**")
+                .addPathPatterns("/api/members/**", "/api/mypage/**", "/api/quizzes/**",
+                        "/api/place", "/api/visit/**", "/api/admin/**")
                 .excludePathPatterns(
                         "/api/members/login",
                         "/api/members/check-nickname",
@@ -40,15 +45,13 @@ public class WebConfig implements WebMvcConfigurer {
                 .excludePathPatterns("/api/admin/login");
     }
 
-    /**
-     * 리프레시 토큰 쿠키를 주고받으려면 allowCredentials(true)가 필요하고,
-     * 이때 allowedOrigins에 와일드카드(*)를 쓸 수 없어 주소를 명시한다.
-     */
+    // 2. CORS — 리프레시 토큰 쿠키를 주고받으려면 allowCredentials(true)가 필요하고,
+    //    이때 allowedOrigins에 와일드카드(*)를 쓸 수 없어 주소를 명시한다.
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/api/**")
-                .allowedOrigins(allowedOrigins)
-                .allowedMethods("GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS")
+        registry.addMapping("/**")
+                .allowedOrigins(allowedHosts) // 서버 .env의 Vercel 주소가 여기에 들어감
+                .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true)
                 .maxAge(3600);
