@@ -25,6 +25,11 @@ public enum ErrorCode {
     EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "A003", "만료된 토큰입니다."),
     INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "A004", "유효하지 않은 리프레시 토큰입니다."),
     SOCIAL_LOGIN_FAILED(HttpStatus.UNAUTHORIZED, "A005", "소셜 로그인 인증에 실패했습니다."),
+    FORBIDDEN(HttpStatus.FORBIDDEN, "A006", "접근 권한이 없습니다."),
+
+    // Quiz (퀴즈)
+    QUIZ_NOT_FOUND(HttpStatus.NOT_FOUND, "Q001", "존재하지 않는 퀴즈입니다."),
+    INVALID_QUIZ_STRUCTURE(HttpStatus.BAD_REQUEST, "Q002", "퀴즈 구성이 올바르지 않습니다. 문항마다 정답 1개가 필요합니다."),
 
     // Place
     PLACE_NOT_FOUND(HttpStatus.NOT_FOUND, "P001", "장소를 찾을 수 없습니다."),

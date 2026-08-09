@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ucamp.gyeongjuma_be.admin.repository.AdminQuizRepository">
+
+    <sql id="quizSetWhere">
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (pqi.title LIKE CONCAT('%', #{keyword}, '%')
+                     OR p.place_name LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="placeId != null">
+                AND pqi.place_id = #{placeId}
+            </if>
+            <if test="difficulty != null and difficulty != ''">
+                AND pqi.difficulty = #{difficulty}
+            </if>
+            <if test="isActive != null">
+                AND pqi.is_active = #{isActive}
+            </if>
+        </where>
+    </sql>
+
+    <sql id="quizSetColumns">
+        pqi.place_quiz_info_id AS placeQuizInfoId,
+        pqi.place_id           AS placeId,
+        p.place_name           AS placeName,
+        pqi.title              AS title,
+        pqi.description        AS description,
+        pqi.difficulty         AS difficulty,
+        pqi.is_active          AS isActive,
+        pqi.created_at         AS createdAt,
+        pqi.deleted_at         AS deletedAt,
+        (SELECT COUNT(*)
+           FROM place_quiz pq
+           JOIN quiz q ON q.quiz_id = pq.quiz_id AND q.is_active = TRUE
+          WHERE pq.place_quiz_info_id = pqi.place_quiz_info_id) AS questionCnt
+    </sql>
+
+    <select id="findQuizSets" resultType="com.ucamp.gyeongjuma_be.admin.dto.response.AdminQuizSetDto">
+        SELECT <include refid="quizSetColumns"/>
+          FROM place_quiz_info pqi
+          JOIN place p ON p.place_id = pqi.place_id
+        <include refid="quizSetWhere"/>
+      ORDER BY pqi.created_at DESC, pqi.place_quiz_info_id DESC
+         LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <select id="countQuizSets" resultType="long">
+        SELECT COUNT(*)
+          FROM place_quiz_info pqi
+          JOIN place p ON p.place_id = pqi.place_id
+        <include refid="quizSetWhere"/>
+    </select>
+
+    <select id="findQuizSetById" resultType="com.ucamp.gyeongjuma_be.admin.dto.response.AdminQuizSetDto">
+        SELECT <include refid="quizSetColumns"/>
+          FROM place_quiz_info pqi
+          JOIN place p ON p.place_id = pqi.place_id
+         WHERE pqi.place_quiz_info_id = #{placeQuizInfoId}
+    </select>
+
+    <select id="findQuestionsBySetId" resultType="com.ucamp.gyeongjuma_be.admin.dto.response.AdminQuizQuestionDto">
+        SELECT q.quiz_id   AS quizId,
+               q.question  AS question,
+               q.is_active AS isActive
+          FROM place_quiz pq
+          JOIN quiz q ON q.quiz_id = pq.quiz_id
+         WHERE pq.place_quiz_info_id = #{placeQuizInfoId}
+      ORDER BY q.quiz_id
+    </select>
+
+    <select id="findAnswersByQuizIds" resultType="com.ucamp.gyeongjuma_be.admin.dto.response.AdminQuizAnswerDto">
+        SELECT a.answer_id  AS answerId,
+               a.content    AS content,
+               a.is_correct AS isCorrect,
+               a.quiz_id    AS quizId
+          FROM quiz_answer a
+         WHERE a.quiz_id IN
+        <foreach collection="quizIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+      ORDER BY a.quiz_id, a.answer_id
+    </select>
+
+    <select id="existsActivePlace" resultType="boolean">
+        SELECT EXISTS (
+            SELECT 1 FROM place WHERE place_id = #{placeId} AND is_active = TRUE
+        )
+    </select>
+
+    <insert id="insertQuizSet">
+        INSERT INTO place_quiz_info (place_id, title, description, difficulty,
+                                     created_at, updated_at, is_active)
+        VALUES (#{placeId}, #{title}, #{description}, #{difficulty},
+                #{createdAt}, #{createdAt}, TRUE)
+    </insert>
+
+    <insert id="insertQuestion">
+        INSERT INTO quiz (question, created_at, updated_at, is_active)
+        VALUES (#{question}, #{createdAt}, #{createdAt}, TRUE)
+    </insert>
+
+    <insert id="insertAnswer">
+        INSERT INTO quiz_answer (content, quiz_id, is_correct)
+        VALUES (#{content}, #{quizId}, #{isCorrect})
+    </insert>
+
+    <insert id="linkQuizToSet">
+        INSERT INTO place_quiz (place_quiz_info_id, quiz_id)
+        VALUES (#{placeQuizInfoId}, #{quizId})
+    </insert>
+
+    <select id="findLastInsertId" resultType="long">
+        SELECT LAST_INSERT_ID()
+    </select>
+
+    <!-- 응답 이력(member_quiz_response)이 문항을 참조하므로 물리 삭제 없이 비활성화만 한다 -->
+    <update id="softDeleteQuizSet">
+        UPDATE place_quiz_info
+           SET is_active          = FALSE,
+               deleted_at         = #{deletedAt},
+               updated_at         = #{deletedAt}
+         WHERE place_quiz_info_id = #{placeQuizInfoId}
+           AND is_active          = TRUE
+    </update>
+
+    <update id="softDeleteQuestionsBySetId">
+        UPDATE quiz q
+          JOIN place_quiz pq ON pq.quiz_id = q.quiz_id
+           SET q.is_active  = FALSE,
+               q.deleted_at = #{deletedAt},
+               q.updated_at = #{deletedAt}
+         WHERE pq.place_quiz_info_id = #{placeQuizInfoId}
+           AND q.is_active = TRUE
+    </update>
+
+</mapper>
