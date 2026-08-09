@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ucamp.gyeongjuma_be.admin.repository.AdminMemberRepository">
+
+    <!-- 검색 조건 (목록/카운트 공용) -->
+    <sql id="memberSearchWhere">
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (m.nickname LIKE CONCAT('%', #{keyword}, '%')
+                     OR m.provider_id LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="role != null and role != ''">
+                AND m.role = #{role}
+            </if>
+            <if test="isActive != null">
+                AND m.is_active = #{isActive}
+            </if>
+        </where>
+    </sql>
+
+    <select id="findRoleById" resultType="string">
+        SELECT role
+          FROM member
+         WHERE member_id = #{memberId}
+           AND is_active = TRUE
+    </select>
+
+    <select id="findMembers" resultType="com.ucamp.gyeongjuma_be.admin.dto.response.AdminMemberDto">
+        SELECT m.member_id   AS memberId,
+               m.nickname    AS nickname,
+               m.provider    AS provider,
+               m.role        AS role,
+               m.difficulty  AS difficulty,
+               m.locale      AS locale,
+               m.`point`     AS `point`,
+               m.is_active   AS isActive,
+               m.created_at  AS createdAt,
+               m.deleted_at  AS deletedAt
+          FROM member m
+        <include refid="memberSearchWhere"/>
+      ORDER BY m.created_at DESC, m.member_id DESC
+         LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <select id="countMembers" resultType="long">
+        SELECT COUNT(*)
+          FROM member m
+        <include refid="memberSearchWhere"/>
+    </select>
+
+    <select id="findMemberDetail" resultType="com.ucamp.gyeongjuma_be.admin.dto.response.AdminMemberDetailDto">
+        SELECT m.member_id       AS memberId,
+               m.nickname        AS nickname,
+               m.provider        AS provider,
+               m.provider_id     AS providerId,
+               m.profile_img_url AS profileImage,
+               m.role            AS role,
+               m.difficulty      AS difficulty,
+               m.locale          AS locale,
+               m.`point`         AS `point`,
+               m.distance        AS distance,
+               m.is_active       AS isActive,
+               m.created_at      AS createdAt,
+               m.updated_at      AS updatedAt,
+               m.deleted_at      AS deletedAt,
+               (SELECT COUNT(*) FROM visit v WHERE v.member_id = m.member_id)                        AS visitCnt,
+               (SELECT COUNT(*) FROM member_stamp ms WHERE ms.member_id = m.member_id)               AS stampCnt,
+               (SELECT COUNT(*) FROM member_quiz_response r WHERE r.member_id = m.member_id)         AS quizAnswerCnt,
+               (SELECT COUNT(*) FROM member_quiz_response r
+                 WHERE r.member_id = m.member_id AND r.is_correct = TRUE)                            AS quizCorrectCnt
+          FROM member m
+         WHERE m.member_id = #{memberId}
+    </select>
+
+    <select id="findMasterAdmin" resultType="com.ucamp.gyeongjuma_be.admin.dto.response.AdminMemberDetailDto">
+        SELECT m.member_id       AS memberId,
+               m.nickname        AS nickname,
+               m.provider        AS provider,
+               m.provider_id     AS providerId,
+               m.profile_img_url AS profileImage,
+               m.role            AS role,
+               m.difficulty      AS difficulty,
+               m.locale          AS locale,
+               m.`point`         AS `point`,
+               m.distance        AS distance,
+               m.is_active       AS isActive,
+               m.created_at      AS createdAt,
+               m.updated_at      AS updatedAt,
+               m.deleted_at      AS deletedAt,
+               0                 AS visitCnt,
+               0                 AS stampCnt,
+               0                 AS quizAnswerCnt,
+               0                 AS quizCorrectCnt
+          FROM member m
+         WHERE m.provider    = #{provider}
+           AND m.provider_id = #{providerId}
+           AND m.is_active   = TRUE
+    </select>
+
+    <!-- 강제 탈퇴: 소프트 삭제 + 닉네임 반납 + 토큰 무효화 (일반 탈퇴와 동일한 처리) -->
+    <update id="softDeleteMember">
+        UPDATE member
+           SET is_active                = FALSE,
+               deleted_at               = #{deletedAt},
+               nickname                 = NULL,
+               refresh_token            = NULL,
+               refresh_token_expired_at = NULL,
+               updated_at               = #{deletedAt}
+         WHERE member_id                = #{memberId}
+           AND is_active                = TRUE
+    </update>
+
+    <update id="addPoint">
+        UPDATE member
+           SET `point`   = `point` + #{amount}
+         WHERE member_id = #{memberId}
+           AND is_active = TRUE
+    </update>
+
+    <insert id="insertPointHistory">
+        INSERT INTO point_history (`point`, description, member_id, created_at)
+        VALUES (#{amount}, #{description}, #{memberId}, #{createdAt})
+    </insert>
+
+</mapper>
