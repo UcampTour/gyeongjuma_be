@@ -38,3 +38,5 @@ out/
 
 ### MyBatis & Database Secret Files ###
 src/main/resources/application-secret.properties
+### 관리자 마스터 계정 비밀번호 해시 생성 도구 (로컬 전용, 공유하지 않음)
+src/test/java/com/ucamp/gyeongjuma_be/AdminPasswordHashTool.java
