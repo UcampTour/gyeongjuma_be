@@ -10,8 +10,8 @@ public record ExtraInfoRequest(
         @Pattern(regexp = "^[가-힣a-zA-Z0-9]+$", message = "닉네임은 한글, 영문, 숫자만 사용할 수 있습니다.")
         String nickname,
 
-        // NORMAL, HARD만 허용 (생략 시 NORMAL)
-        @Pattern(regexp = "^$|^(?i)(NORMAL|HARD)$", message = "난이도는 NORMAL 또는 HARD만 선택할 수 있습니다.")
+        // EASY, NORMAL, HARD (생략 시 NORMAL)
+        @Pattern(regexp = "^$|^(?i)(EASY|NORMAL|HARD)$", message = "난이도는 EASY, NORMAL, HARD 중 하나여야 합니다.")
         String difficulty,
 
         // ko, en 등 언어 코드 (생략 시 ko)

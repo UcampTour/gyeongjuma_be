@@ -2,14 +2,14 @@ package com.ucamp.gyeongjuma_be.member.service;
 
 import com.ucamp.gyeongjuma_be.member.dto.request.ExtraInfoRequest;
 import com.ucamp.gyeongjuma_be.member.dto.request.LoginRequest;
-import com.ucamp.gyeongjuma_be.member.dto.response.LoginResponse;
+import com.ucamp.gyeongjuma_be.member.dto.response.LoginResult;
 import com.ucamp.gyeongjuma_be.member.dto.response.MemberInfoResponse;
 import com.ucamp.gyeongjuma_be.member.dto.response.NicknameCheckResponse;
-import com.ucamp.gyeongjuma_be.member.dto.response.TokenResponse;
+import com.ucamp.gyeongjuma_be.member.dto.response.TokenResult;
 
 public interface MemberService {
 
-    LoginResponse login(LoginRequest request);
+    LoginResult login(LoginRequest request);
 
     MemberInfoResponse getMyInfo(Long memberId);
 
@@ -17,7 +17,7 @@ public interface MemberService {
 
     NicknameCheckResponse checkNickname(String nickname);
 
-    TokenResponse reissue(String refreshToken);
+    TokenResult reissue(String refreshToken);
 
     void logout(Long memberId);
 

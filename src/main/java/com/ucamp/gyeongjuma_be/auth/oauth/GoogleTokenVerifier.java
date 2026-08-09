@@ -2,6 +2,7 @@ package com.ucamp.gyeongjuma_be.auth.oauth;
 
 import com.ucamp.gyeongjuma_be.common.exception.CustomException;
 import com.ucamp.gyeongjuma_be.common.exception.ErrorCode;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -17,11 +18,12 @@ import java.util.Map;
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class GoogleTokenVerifier implements SocialTokenVerifier {
 
     private static final String TOKEN_INFO_URL = "https://oauth2.googleapis.com/tokeninfo?id_token={idToken}";
 
-    private final RestClient restClient = RestClient.create();
+    private final RestClient restClient;
 
     @Value("${oauth.google.client-id:}")
     private String clientId;
