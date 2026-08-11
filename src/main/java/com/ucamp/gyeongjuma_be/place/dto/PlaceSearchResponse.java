@@ -28,5 +28,8 @@ public class PlaceSearchResponse {
     @JsonProperty("isVisited")
     private Boolean isVisited;
 
+    @JsonProperty("isFavorite")
+    private Boolean isFavorite;
+
     private String imageUrl;
 }
