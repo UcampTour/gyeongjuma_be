@@ -215,6 +215,15 @@
                 ) THEN TRUE
                 ELSE FALSE
             END AS isVisited,
+            CASE
+                WHEN EXISTS (
+                    SELECT 1
+                    FROM favorite f
+                    WHERE f.place_id = p.place_id
+                      AND f.member_id = #{memberId}
+                ) THEN TRUE
+                ELSE FALSE
+            END AS isFavorite,
             NULLIF(p.first_image, '') AS imageUrl
         FROM place p
         LEFT JOIN place_content pc
