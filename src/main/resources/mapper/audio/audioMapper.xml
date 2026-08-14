@@ -30,7 +30,8 @@
             )) AS imageUrl,
             title,
             script,
-            play_time AS playTime
+            play_time AS playTime,
+            place_id
         FROM audio
         WHERE place_id = #{placeId}
         ORDER BY audio_id ASC
