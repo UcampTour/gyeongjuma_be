@@ -2,6 +2,7 @@ package com.ucamp.gyeongjuma_be.member.service;
 
 import com.ucamp.gyeongjuma_be.member.dto.request.ExtraInfoRequest;
 import com.ucamp.gyeongjuma_be.member.dto.request.LoginRequest;
+import com.ucamp.gyeongjuma_be.member.dto.request.MemberUpdateRequest;
 import com.ucamp.gyeongjuma_be.member.dto.response.LoginResult;
 import com.ucamp.gyeongjuma_be.member.dto.response.MemberInfoResponse;
 import com.ucamp.gyeongjuma_be.member.dto.response.NicknameCheckResponse;
@@ -14,6 +15,8 @@ public interface MemberService {
     MemberInfoResponse getMyInfo(Long memberId);
 
     MemberInfoResponse registerExtraInfo(Long memberId, ExtraInfoRequest request);
+
+    MemberInfoResponse updateMyInfo(Long memberId, MemberUpdateRequest request);
 
     NicknameCheckResponse checkNickname(String nickname);
 
