@@ -64,6 +64,19 @@
            AND is_active  = TRUE
     </update>
 
+    <!-- 부분 수정: null이 아닌 필드만 SET. updated_at은 NOW()(UTC 세션) 대신 앱에서 KST를 넘겨받는다 -->
+    <update id="updateProfile">
+        UPDATE member
+        <set>
+            <if test="nickname != null">nickname = #{nickname},</if>
+            <if test="difficulty != null">difficulty = #{difficulty},</if>
+            <if test="locale != null">locale = #{locale},</if>
+            updated_at = #{updatedAt}
+        </set>
+        WHERE member_id = #{memberId}
+          AND is_active = TRUE
+    </update>
+
     <update id="updateRefreshToken">
         UPDATE member
            SET refresh_token            = #{refreshToken},
