@@ -30,4 +30,6 @@ public interface MemberRepository {
     int reactivateMember(@Param("memberId") Long memberId);
 
     int softDeleteById(@Param("memberId") Long memberId);
+
+    int incrementVisitPlaceCnt(@Param("memberId") Long memberId);
 }

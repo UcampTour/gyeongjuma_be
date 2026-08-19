@@ -2,6 +2,7 @@ package com.ucamp.gyeongjuma_be.visit.service;
 
 import com.ucamp.gyeongjuma_be.common.exception.CustomException;
 import com.ucamp.gyeongjuma_be.common.exception.ErrorCode;
+import com.ucamp.gyeongjuma_be.member.repository.MemberRepository;
 import com.ucamp.gyeongjuma_be.place.domain.Place;
 import com.ucamp.gyeongjuma_be.place.repository.PlaceRepository;
 import com.ucamp.gyeongjuma_be.visit.domain.Visit;
@@ -16,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class VisitServiceImpl implements VisitService {
     private static final double EARTH_RADIUS_METERS = 6_371_000;
+    private final MemberRepository memberRepository;
     private final PlaceRepository placeRepository;
     private final VisitRepository visitRepository;
 
@@ -39,6 +41,9 @@ public class VisitServiceImpl implements VisitService {
 
         Visit visit = new Visit(memberId, placeId);
         visitRepository.save(visit);
+        if (memberRepository.incrementVisitPlaceCnt(memberId) != 1) {
+            throw new CustomException(ErrorCode.MEMBER_NOT_FOUND);
+        }
         return new VisitResponse(visit.getVisitId(), placeId, distanceMeters, radiusMeters);
     }
 

@@ -64,6 +64,14 @@
            AND is_active  = TRUE
     </update>
 
+    <update id="incrementVisitPlaceCnt">
+        UPDATE member
+           SET visit_place_cnt = COALESCE(visit_place_cnt, 0) + 1,
+               updated_at      = NOW()
+         WHERE member_id       = #{memberId}
+           AND is_active       = TRUE
+    </update>
+
     <update id="updateRefreshToken">
         UPDATE member
            SET refresh_token            = #{refreshToken},
