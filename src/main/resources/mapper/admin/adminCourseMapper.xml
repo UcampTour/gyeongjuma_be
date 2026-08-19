@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ucamp.gyeongjuma_be.admin.repository.AdminCourseRepository">
+
+    <sql id="courseSearchWhere">
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (c.name LIKE CONCAT('%', #{keyword}, '%')
+                     OR c.description LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="isActive != null">
+                AND c.is_active = #{isActive}
+            </if>
+        </where>
+    </sql>
+
+    <sql id="courseColumns">
+        c.course_id     AS courseId,
+        c.name          AS name,
+        c.description   AS description,
+        c.thumbnail_url AS thumbnailUrl,
+        c.place_cnt     AS placeCnt,
+        c.is_active     AS isActive,
+        c.created_at    AS createdAt,
+        c.deleted_at    AS deletedAt
+    </sql>
+
+    <select id="findCourses" resultType="com.ucamp.gyeongjuma_be.admin.dto.response.AdminCourseDto">
+        SELECT <include refid="courseColumns"/>
+          FROM course c
+        <include refid="courseSearchWhere"/>
+      ORDER BY c.created_at DESC, c.course_id DESC
+         LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <select id="countCourses" resultType="long">
+        SELECT COUNT(*)
+          FROM course c
+        <include refid="courseSearchWhere"/>
+    </select>
+
+    <select id="findCourseById" resultType="com.ucamp.gyeongjuma_be.admin.dto.response.AdminCourseDto">
+        SELECT <include refid="courseColumns"/>
+          FROM course c
+         WHERE c.course_id = #{courseId}
+    </select>
+
+    <!-- created_at/updated_at은 NOW()(UTC 세션) 대신 앱에서 KST를 넘겨받는다 -->
+    <insert id="insertCourse">
+        INSERT INTO course (name, description, thumbnail_url, place_cnt,
+                            created_at, updated_at, is_active)
+        VALUES (#{request.name}, #{request.description}, #{request.thumbnailUrl}, #{placeCnt},
+                #{createdAt}, #{createdAt}, TRUE)
+    </insert>
+
+    <select id="findLastInsertedCourseId" resultType="long">
+        SELECT LAST_INSERT_ID()
+    </select>
+
+    <!-- 나열 순서를 sort_order 1..N으로 부여 (index는 0부터라 +1) -->
+    <insert id="insertCoursePlaces">
+        INSERT INTO course_place (course_id, place_id, sort_order)
+        VALUES
+        <foreach collection="placeIds" item="placeId" index="idx" separator=",">
+            (#{courseId}, #{placeId}, #{idx} + 1)
+        </foreach>
+    </insert>
+
+    <select id="findCoursePlaces" resultType="com.ucamp.gyeongjuma_be.admin.dto.response.AdminCoursePlaceDto">
+        SELECT cp.course_place_id                          AS coursePlaceId,
+               p.place_id                                  AS placeId,
+               p.place_name                                AS placeName,
+               CONCAT_WS(' ', p.add1, NULLIF(p.add2, ''))  AS address,
+               NULLIF(p.first_image, '')                   AS imageUrl,
+               cp.sort_order                               AS sortOrder
+          FROM course_place cp
+          JOIN place p
+            ON p.place_id = cp.place_id
+         WHERE cp.course_id = #{courseId}
+      ORDER BY cp.sort_order ASC, cp.course_place_id ASC
+    </select>
+
+    <select id="findActivePlaceIds" resultType="long">
+        SELECT p.place_id
+          FROM place p
+         WHERE p.is_active = TRUE
+           AND p.place_id IN
+        <foreach collection="placeIds" item="placeId" open="(" separator="," close=")">
+            #{placeId}
+        </foreach>
+    </select>
+
+    <!-- 물리 삭제는 member_course_state의 FK(fk_course_state_course) 때문에 불가하므로 소프트 삭제 -->
+    <update id="softDeleteCourse">
+        UPDATE course
+           SET is_active  = FALSE,
+               deleted_at = #{deletedAt},
+               updated_at = #{deletedAt}
+         WHERE course_id  = #{courseId}
+           AND is_active  = TRUE
+    </update>
+
+    <update id="restoreCourse">
+        UPDATE course
+           SET is_active  = TRUE,
+               deleted_at = NULL,
+               updated_at = #{updatedAt}
+         WHERE course_id  = #{courseId}
+           AND is_active  = FALSE
+    </update>
+
+</mapper>
