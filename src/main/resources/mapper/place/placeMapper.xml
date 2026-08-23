@@ -110,6 +110,7 @@
             lcls_systm1 AS lclsSystm1,
             lcls_systm2 AS lclsSystm2,
             lcls_systm3 AS lclsSystm3,
+            language,
             radius_meters AS radiusMeters,
             parking,
             usetime,
@@ -139,6 +140,11 @@
             0.0 AS rating, <!-- 추후 구현 예정 -->
             0 AS reviewCount, <!-- 추후 구현 예정 -->
             0 AS likes, <!-- 추후 구현 예정 -->
+            (
+                SELECT COUNT(*)
+                FROM visit v
+                WHERE v.place_id = p.place_id
+            ) AS visitCnt, <!-- 방문자수 추가 -->
             p.map_y AS lat,
             p.map_x AS lng,
             p.add1 AS add1,
@@ -234,6 +240,7 @@
          AND cl.log_date = CURDATE()
          AND cl.is_active = TRUE
         WHERE p.is_active = TRUE
+          AND p.language = (SELECT locale FROM member WHERE member_id = #{memberId})
         <if test="search != null and search != ''">
           AND p.place_name LIKE CONCAT('%', #{search}, '%')
         </if>

@@ -15,6 +15,7 @@ public class PlaceSearchResponse {
     private Double rating;
     private Long reviewCount;
     private Long likes;
+    private Long visitCnt; // 방문자수 추가
     private Double lat;
     private Double lng;
     private Double distance;
