@@ -14,6 +14,8 @@ public interface PlaceRepository {
 
     int updateDetail(Place place);
 
+    List<Place> findAllByLanguage(@Param("language") String language);
+
     void deletePlaceContent(@Param("placeId") Long placeId,
                             @Param("language") String language,
                             @Param("difficulty") String difficulty);

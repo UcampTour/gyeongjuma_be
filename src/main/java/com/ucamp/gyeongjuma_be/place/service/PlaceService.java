@@ -4,6 +4,7 @@ import com.ucamp.gyeongjuma_be.place.dto.PlaceListResponse;
 import com.ucamp.gyeongjuma_be.place.dto.PlaceSearchResponse;
 
 import java.util.List;
+import java.util.Map;
 
 public interface PlaceService {
     List<PlaceListResponse> syncPlaces();
@@ -11,6 +12,8 @@ public interface PlaceService {
     int syncPlaceDetails();
 
     int syncPlaceContents();
+
+    Map<String, Integer> syncPlaceContentsAllLanguages();
 
     List<PlaceSearchResponse> searchPlaces(Long memberId, String search, String sort, Double latitude, Double longitude);
 }

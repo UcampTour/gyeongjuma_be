@@ -24,7 +24,7 @@ public class PlaceListResponse {
 
     public static PlaceListResponse from(Place place) {
         return PlaceListResponse.builder()
-                .placeId(place.getPlaceId())
+                .placeId(place.getApiPlaceId())
                 .placeName(place.getPlaceName())
                 .add1(place.getAdd1())
                 .add2(place.getAdd2())

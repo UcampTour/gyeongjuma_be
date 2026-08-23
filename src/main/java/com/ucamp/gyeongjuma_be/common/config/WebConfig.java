@@ -30,12 +30,13 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addInterceptor(authInterceptor)
                 .order(1)
                 .addPathPatterns("/api/members/**", "/api/mypage/**", "/api/quizzes/**",
-                        "/api/place", "/api/visit/**", "/api/admin/**")
+                        "/api/visit/**", "/api/admin/**")
                 .excludePathPatterns(
                         "/api/members/login",
                         "/api/members/check-nickname",
                         "/api/members/reissue",
                         "/api/admin/login"
+
                 );
 
         // 2순위: 관리자 권한 검사 (memberId가 주입된 뒤에 실행되어야 함)

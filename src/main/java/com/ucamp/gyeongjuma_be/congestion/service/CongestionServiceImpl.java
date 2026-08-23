@@ -42,7 +42,7 @@ public class CongestionServiceImpl implements CongestionService {
             }
 
             congestions.addAll(congestionApiClient.getCongestionList(
-                    place.getPlaceId(),
+                    place.getApiPlaceId(),
                     GYEONGJU_AREA_CD,
                     GYEONGJU_SIGNGU_CD,
                     place.getPlaceName(),

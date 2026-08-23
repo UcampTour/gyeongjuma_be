@@ -51,6 +51,16 @@ public class PlaceController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @PostMapping("/contents/all")
+    public ResponseEntity<ApiResponse<java.util.Map<String, Integer>>> syncPlaceContentsAllLanguages() {
+        java.util.Map<String, Integer> saveCounts = placeService.syncPlaceContentsAllLanguages();
+
+        ApiResponse<java.util.Map<String, Integer>> apiResponse =
+                ApiResponse.success("관광지 다국어 해설 저장이 완료되었습니다.", saveCounts);
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
     @GetMapping
     public ResponseEntity<ApiResponse<List<PlaceSearchResponse>>> searchPlaces(
             @RequestParam(required = false) String search,

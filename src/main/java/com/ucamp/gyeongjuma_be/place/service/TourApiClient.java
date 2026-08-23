@@ -28,19 +28,19 @@ public class TourApiClient {
     @Value("${tour.api.service-key:}")
     private String serviceKey;
 
-    public String getPlaceXml() {
+    public String getPlaceXml(TourApiLocale locale) {
         if (serviceKey == null || serviceKey.isBlank()) {
             throw new IllegalStateException("service-key 설정이 필요합니다.");
         }
 
-        String url = "https://apis.data.go.kr/B551011/KorService2/areaBasedList2"
+        String url = "https://apis.data.go.kr/B551011/" + locale.serviceName() + "/areaBasedList2"
                 + "?serviceKey=" + encodedServiceKey()
                 + "&MobileOS=WEB"
                 + "&MobileApp=Gyeongjuma"
                 + "&_type=xml"
                 + "&numOfRows=1000"
                 + "&pageNo=1"
-                + "&contentTypeId=12"
+                + "&contentTypeId=" + locale.contentTypeId()
                 + "&lDongRegnCd=47"
                 + "&lDongSignguCd=130"
                 + "&lclsSystm1=HS";
@@ -54,8 +54,8 @@ public class TourApiClient {
         return new String(response, StandardCharsets.UTF_8);
     }
 
-    public List<Place> getPlaceList() {
-        String xml = getPlaceXml();
+    public List<Place> getPlaceList(TourApiLocale locale) {
+        String xml = getPlaceXml(locale);
 
         if (xml == null || xml.isBlank()) {
             return List.of();
@@ -79,7 +79,7 @@ public class TourApiClient {
                 }
 
                 places.add(Place.builder()
-                        .placeId(placeId)
+                        .apiPlaceId(placeId)
                         .placeName(text(item, "title"))
                         .add1(text(item, "addr1"))
                         .add2(text(item, "addr2"))
@@ -92,6 +92,7 @@ public class TourApiClient {
                         .lclsSystm2(text(item, "lclsSystm2"))
                         .lclsSystm3(text(item, "lclsSystm3"))
                         .radiusMeters(text(item, "radius"))
+                        .language(locale.contentLanguage())
                         .build());
             }
 
@@ -101,18 +102,18 @@ public class TourApiClient {
         }
     }
 
-    public Place getPlaceDetail(Long contentId) {
+    public Place getPlaceDetail(Long contentId, TourApiLocale locale) {
         if (serviceKey == null || serviceKey.isBlank()) {
-            throw new IllegalStateException("service-key ?ㅼ젙???꾩슂?⑸땲??");
+            throw new IllegalStateException("service-key 설정이 필요합니다.");
         }
 
-        String url = "https://apis.data.go.kr/B551011/KorService2/detailIntro2"
+        String url = "https://apis.data.go.kr/B551011/" + locale.serviceName() + "/detailIntro2"
                 + "?serviceKey=" + encodedServiceKey()
                 + "&MobileOS=WEB"
                 + "&MobileApp=Gyeongjuma"
                 + "&_type=xml"
                 + "&contentId=" + contentId
-                + "&contentTypeId=12";
+                + "&contentTypeId=" + locale.contentTypeId();
 
         byte[] response = restTemplate.getForObject(URI.create(url), byte[].class);
 
@@ -139,25 +140,31 @@ public class TourApiClient {
             }
 
             Element item = (Element) items.item(0);
+            Long itemContentId = parseLong(text(item, "contentid"));
+
+            if (itemContentId != null && !itemContentId.equals(contentId)) {
+                return null;
+            }
 
             return Place.builder()
-                    .placeId(contentId)
+                    .apiPlaceId(itemContentId != null ? itemContentId : contentId)
                     .tel(text(item, "infocenter"))
                     .parking(text(item, "parking"))
                     .usetime(text(item, "usetime"))
                     .restdate(text(item, "restdate"))
+                    .language(locale.contentLanguage())
                     .build();
         } catch (Exception e) {
-            throw new IllegalStateException("愿愿묎났???곸꽭 XML ?뚯떛???ㅽ뙣?덉뒿?덌떎.", e);
+            throw new IllegalStateException("관광공사 장소 정보 XML 파싱에 실패했습니다.", e);
         }
     }
 
-    public String getPlaceOverview(Long contentId) {
+    public PlaceOverview getPlaceOverview(Long contentId, TourApiLocale locale) {
         if (serviceKey == null || serviceKey.isBlank()) {
             throw new IllegalStateException("service-key 설정이 필요합니다.");
         }
 
-        String url = "https://apis.data.go.kr/B551011/KorService2/detailCommon2"
+        String url = "https://apis.data.go.kr/B551011/" + locale.serviceName() + "/detailCommon2"
                 + "?serviceKey=" + encodedServiceKey()
                 + "&MobileOS=ETC"
                 + "&MobileApp=AppTest"
@@ -179,9 +186,19 @@ public class TourApiClient {
                     .path("items")
                     .path("item");
             JsonNode item = items.isArray() ? items.path(0) : items;
+            Long itemContentId = parseLong(item.path("contentid").asText(null));
+
+            if (itemContentId != null && !itemContentId.equals(contentId)) {
+                return null;
+            }
+
             String overview = item.path("overview").asText(null);
 
-            return overview == null || overview.isBlank() ? null : overview.trim();
+            if (overview == null || overview.isBlank()) {
+                return null;
+            }
+
+            return new PlaceOverview(itemContentId != null ? itemContentId : contentId, overview.trim());
         } catch (Exception e) {
             throw new IllegalStateException("관광지 설명 JSON 파싱에 실패했습니다.", e);
         }
@@ -222,5 +239,42 @@ public class TourApiClient {
         }
 
         return Double.parseDouble(value);
+    }
+
+    public enum TourApiLocale {
+        KOREAN("KorService2", "ko", 12),
+        ENGLISH("EngService2", "en", 76),
+        JAPANESE("JpnService2", "ja", 76),
+        CHINESE_SIMPLIFIED("ChsService2", "zh", 76),
+        CHINESE_TRADITIONAL("ChtService2", "zh-Hant", 76),
+        GERMAN("GerService2", "de", 76),
+        FRENCH("FreService2", "fr", 76),
+        SPANISH("SpnService2", "es", 76),
+        RUSSIAN("RusService2", "ru", 76);
+
+        private final String serviceName;
+        private final String contentLanguage;
+        private final int contentTypeId;
+
+        TourApiLocale(String serviceName, String contentLanguage, int contentTypeId) {
+            this.serviceName = serviceName;
+            this.contentLanguage = contentLanguage;
+            this.contentTypeId = contentTypeId;
+        }
+
+        public String serviceName() {
+            return serviceName;
+        }
+
+        public String contentLanguage() {
+            return contentLanguage;
+        }
+
+        public int contentTypeId() {
+            return contentTypeId;
+        }
+    }
+
+    public record PlaceOverview(Long contentId, String overview) {
     }
 }

@@ -7,7 +7,7 @@
 
     <insert id="saveAll">
         INSERT INTO place (
-            place_id,
+            api_place_id,
             place_name,
             add1,
             add2,
@@ -20,6 +20,7 @@
             lcls_systm2,
             lcls_systm3,
             radius_meters,
+            language,
             created_at,
             updated_at,
             is_active
@@ -27,7 +28,7 @@
         VALUES
         <foreach collection="places" item="place" separator=",">
             (
-                #{place.placeId},
+                #{place.apiPlaceId},
                 #{place.placeName},
                 #{place.add1},
                 #{place.add2},
@@ -40,6 +41,7 @@
                 #{place.lclsSystm2},
                 #{place.lclsSystm3},
                 #{place.radiusMeters},
+                #{place.language},
                 #{place.createdAt},
                 #{place.updatedAt},
                 #{place.isActive}
@@ -58,6 +60,7 @@
             lcls_systm2 = VALUES(lcls_systm2),
             lcls_systm3 = VALUES(lcls_systm3),
             radius_meters = VALUES(radius_meters),
+            language = VALUES(language),
             updated_at = VALUES(updated_at),
             is_active = VALUES(is_active)
     </insert>
@@ -70,9 +73,40 @@
             usetime = #{usetime},
             restdate = #{restdate},
             updated_at = NOW()
-        WHERE place_id = #{placeId}
+        WHERE api_place_id = #{apiPlaceId}
+          AND language = #{language}
           AND is_active = TRUE
     </update>
+
+    <select id="findAllByLanguage" resultType="com.ucamp.gyeongjuma_be.place.domain.Place">
+        SELECT
+            place_id AS placeId,
+            api_place_id AS apiPlaceId,
+            place_name AS placeName,
+            add1,
+            add2,
+            tel,
+            content_type_id AS contentTypeId,
+            map_x AS mapX,
+            map_y AS mapY,
+            first_image AS firstImage,
+            lcls_systm1 AS lclsSystm1,
+            lcls_systm2 AS lclsSystm2,
+            lcls_systm3 AS lclsSystm3,
+            radius_meters AS radiusMeters,
+            parking,
+            usetime,
+            restdate,
+            language,
+            created_at AS createdAt,
+            updated_at AS updatedAt,
+            deleted_at AS deletedAt,
+            is_active AS isActive
+        FROM place
+        WHERE is_active = TRUE
+          AND language = #{language}
+        ORDER BY place_id DESC
+    </select>
 
     <delete id="deletePlaceContent">
         DELETE FROM place_content
@@ -99,6 +133,7 @@
     <select id="findAll" resultType="com.ucamp.gyeongjuma_be.place.domain.Place">
         SELECT
             place_id AS placeId,
+            api_place_id AS apiPlaceId,
             place_name AS placeName,
             add1,
             add2,
@@ -114,6 +149,7 @@
             parking,
             usetime,
             restdate,
+            language,
             created_at AS createdAt,
             updated_at AS updatedAt,
             deleted_at AS deletedAt,
@@ -124,9 +160,10 @@
     </select>
 
     <select id="findById" resultType="com.ucamp.gyeongjuma_be.place.domain.Place">
-        SELECT place_id AS placeId, map_x AS mapX, map_y AS mapY, radius_meters AS radiusMeters
+        SELECT place_id AS placeId, map_x AS mapX, map_y AS mapY, radius_meters AS radiusMeters, language
         FROM place
         WHERE place_id = #{placeId}
+          AND language = 'ko'
           AND is_active = TRUE
     </select>
 

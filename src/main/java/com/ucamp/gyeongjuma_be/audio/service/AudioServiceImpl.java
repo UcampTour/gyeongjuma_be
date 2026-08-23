@@ -30,9 +30,9 @@ public class AudioServiceImpl implements AudioService {
                 continue;
             }
 
-            List<Audio> audios = audioApiClient.searchAudios(place.getPlaceId(), place.getPlaceName());
+            List<Audio> audios = audioApiClient.searchAudios(place.getApiPlaceId(), place.getPlaceName());
             for (Audio audio : audios) {
-                if (!audioRepository.existsByPlaceIdAndAudioUrl(place.getPlaceId(), audio.getAudioUrl())) {
+                if (!audioRepository.existsByPlaceIdAndAudioUrl(place.getApiPlaceId(), audio.getAudioUrl())) {
                     savedCount += audioRepository.save(audio);
                 }
             }

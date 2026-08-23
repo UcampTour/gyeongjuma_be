@@ -12,6 +12,7 @@ import lombok.Setter;
 public class Place extends BaseEntity {
 
     private Long placeId;
+    private Long apiPlaceId;
     private String placeName;
     private String add1;
     private String add2;
@@ -27,13 +28,15 @@ public class Place extends BaseEntity {
     private String parking;
     private String usetime;
     private String restdate;
+    private String language;
 
     @Builder
-    public Place(Long placeId, String placeName, String add1, String add2, String tel,
+    public Place(Long placeId, Long apiPlaceId, String placeName, String add1, String add2, String tel,
                  Long contentTypeId, Double mapX, Double mapY, String firstImage,
                  String lclsSystm1, String lclsSystm2, String lclsSystm3, String radiusMeters,
-                 String parking, String usetime, String restdate) {
+                 String parking, String usetime, String restdate, String language) {
         this.placeId = placeId;
+        this.apiPlaceId = apiPlaceId;
         this.placeName = placeName;
         this.add1 = add1;
         this.add2 = add2== null ? "" : add2;
@@ -49,5 +52,6 @@ public class Place extends BaseEntity {
         this.parking = parking == null ? "정보 없음" : parking;
         this.usetime = usetime == null ? "" : usetime;
         this.restdate = restdate == null ? "" : restdate;
+        this.language = language;
     }
 }
