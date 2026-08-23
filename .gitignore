@@ -40,3 +40,9 @@ out/
 src/main/resources/application-secret.properties
 ### 관리자 마스터 계정 비밀번호 해시 생성 도구 (로컬 전용, 공유하지 않음)
 src/test/java/com/ucamp/gyeongjuma_be/AdminPasswordHashTool.java
+
+### 로컬 개발 도구 설정 (공유하지 않음) ###
+.claude/
+
+### 로컬 작성 문서 (공유하지 않음) ###
+docs/

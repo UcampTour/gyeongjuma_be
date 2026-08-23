@@ -30,6 +30,8 @@ public enum ErrorCode {
     // Quiz (퀴즈)
     QUIZ_NOT_FOUND(HttpStatus.NOT_FOUND, "Q001", "존재하지 않는 퀴즈입니다."),
     INVALID_QUIZ_STRUCTURE(HttpStatus.BAD_REQUEST, "Q002", "퀴즈 구성이 올바르지 않습니다. 문항마다 정답 1개가 필요합니다."),
+    DUPLICATE_QUIZ_TRANSLATION(HttpStatus.CONFLICT, "Q003", "해당 언어의 번역본이 이미 존재합니다."),
+    INVALID_QUIZ_TRANSLATION(HttpStatus.BAD_REQUEST, "Q004", "번역본 구성이 원본과 맞지 않습니다."),
 
     // Place
     PLACE_NOT_FOUND(HttpStatus.NOT_FOUND, "P001", "장소를 찾을 수 없습니다."),
