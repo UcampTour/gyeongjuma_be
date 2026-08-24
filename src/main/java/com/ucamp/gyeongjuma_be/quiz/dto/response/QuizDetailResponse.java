@@ -18,6 +18,9 @@ public class QuizDetailResponse {
     private String imageUrl;
     private String title;
     private String description;
+    private Integer point;
+    private String difficulty;
+    private Boolean isActive;
     private Integer totalQuestions;
     private Integer correctQuestions;
     private Integer lastQuestionIndex;

@@ -60,6 +60,9 @@
         <result property="imageUrl" column="image_url"/>
         <result property="title" column="title"/>
         <result property="description" column="description"/>
+        <result property="point" column="point"/>
+        <result property="difficulty" column="difficulty"/>
+        <result property="isActive" column="is_active"/>
         <result property="totalQuestions" column="total_questions"/>
         <result property="correctQuestions" column="correct_questions"/>
         <result property="lastQuestionIndex" column="last_question_index"/>
@@ -83,6 +86,9 @@
                p.first_image AS image_url,
                pqi.title AS title,
                pqi.description AS description,
+               pqi.point AS point,
+               pqi.difficulty AS difficulty,
+               pqi.is_active AS is_active,
                stats.total_questions AS total_questions,
                stats.correct_questions AS correct_questions,
                CASE
