@@ -4,6 +4,7 @@ import com.ucamp.gyeongjuma_be.common.exception.CustomException;
 import com.ucamp.gyeongjuma_be.common.exception.ErrorCode;
 import com.ucamp.gyeongjuma_be.place.domain.Place;
 import com.ucamp.gyeongjuma_be.place.repository.PlaceRepository;
+import com.ucamp.gyeongjuma_be.member.repository.MemberRepository;
 import com.ucamp.gyeongjuma_be.visit.domain.Visit;
 import com.ucamp.gyeongjuma_be.visit.dto.VisitRequest;
 import com.ucamp.gyeongjuma_be.visit.dto.VisitResponse;
@@ -12,12 +13,25 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class VisitServiceImpl implements VisitService {
     private static final double EARTH_RADIUS_METERS = 6_371_000;
     private final PlaceRepository placeRepository;
+    private final MemberRepository memberRepository;
     private final VisitRepository visitRepository;
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Long> getRecentVisits(Long memberId) {
+        if (memberRepository.findById(memberId) == null) {
+            throw new CustomException(ErrorCode.MEMBER_NOT_FOUND);
+        }
+
+        return visitRepository.findRecentPlaceIdsByMemberId(memberId);
+    }
 
     @Override
     @Transactional

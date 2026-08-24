@@ -1,6 +1,21 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ucamp.gyeongjuma_be.visit.repository.VisitRepository">
+    <select id="findRecentPlaceIdsByMemberId" resultType="long">
+        SELECT p.place_id
+          FROM visit v
+          JOIN member m
+            ON m.member_id = v.member_id
+           AND m.is_active = TRUE
+          JOIN place p
+            ON p.place_id = v.place_id
+           AND p.is_active = TRUE
+         WHERE v.member_id = #{memberId}
+           AND LOWER(p.language) = LOWER(m.locale)
+      ORDER BY v.created_at DESC
+         LIMIT 10
+    </select>
+
     <select id="existsByMemberIdAndPlaceId" resultType="boolean">
         SELECT EXISTS(
             SELECT 1
