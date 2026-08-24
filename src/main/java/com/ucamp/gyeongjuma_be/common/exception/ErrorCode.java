@@ -30,11 +30,17 @@ public enum ErrorCode {
     // Quiz (퀴즈)
     QUIZ_NOT_FOUND(HttpStatus.NOT_FOUND, "Q001", "존재하지 않는 퀴즈입니다."),
     INVALID_QUIZ_STRUCTURE(HttpStatus.BAD_REQUEST, "Q002", "퀴즈 구성이 올바르지 않습니다. 문항마다 정답 1개가 필요합니다."),
+    DUPLICATE_QUIZ_TRANSLATION(HttpStatus.CONFLICT, "Q003", "해당 언어의 번역본이 이미 존재합니다."),
+    INVALID_QUIZ_TRANSLATION(HttpStatus.BAD_REQUEST, "Q004", "번역본 구성이 원본과 맞지 않습니다."),
 
     // Place
     PLACE_NOT_FOUND(HttpStatus.NOT_FOUND, "P001", "장소를 찾을 수 없습니다."),
     OUT_OF_VISIT_RADIUS(HttpStatus.BAD_REQUEST, "P002", "방문 인증 가능 반경 밖입니다."),
     ALREADY_VISITED(HttpStatus.BAD_REQUEST, "P003", "이미 방문 인증한 장소입니다."),
+
+    // Course (코스)
+    COURSE_NOT_FOUND(HttpStatus.NOT_FOUND, "CO001", "존재하지 않는 코스입니다."),
+    DUPLICATE_COURSE_PLACE(HttpStatus.BAD_REQUEST, "CO002", "코스에 같은 장소를 중복해서 담을 수 없습니다."),
 
     // Database / Infrastructure
     DATABASE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "D001", "데이터베이스 처리 중 오류가 발생했습니다.");

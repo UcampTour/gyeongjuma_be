@@ -15,4 +15,5 @@ public class AudioResponse {
     private String title;
     private String script;
     private String playTime;
+    private Long placeId;
 }

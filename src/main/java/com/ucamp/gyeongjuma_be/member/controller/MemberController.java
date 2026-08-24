@@ -7,6 +7,7 @@ import com.ucamp.gyeongjuma_be.common.exception.CustomException;
 import com.ucamp.gyeongjuma_be.common.exception.ErrorCode;
 import com.ucamp.gyeongjuma_be.member.dto.request.ExtraInfoRequest;
 import com.ucamp.gyeongjuma_be.member.dto.request.LoginRequest;
+import com.ucamp.gyeongjuma_be.member.dto.request.MemberUpdateRequest;
 import com.ucamp.gyeongjuma_be.member.dto.request.ReissueRequest;
 import com.ucamp.gyeongjuma_be.member.dto.response.LoginResponse;
 import com.ucamp.gyeongjuma_be.member.dto.response.LoginResult;
@@ -70,6 +71,18 @@ public class MemberController {
             @Valid @RequestBody ExtraInfoRequest request) {
         MemberInfoResponse response = memberService.registerExtraInfo(memberId, request);
         return ResponseEntity.ok(ApiResponse.success("추가 정보가 등록되었습니다.", response));
+    }
+
+    /**
+     * 2-1. 내 정보 수정 (닉네임, 퀴즈 난이도, 언어)
+     * 세 필드 모두 선택값이며, 보내지 않은 필드는 기존 값을 그대로 유지한다.
+     */
+    @PatchMapping("/me")
+    public ResponseEntity<ApiResponse<MemberInfoResponse>> updateMyInfo(
+            @RequestAttribute(AuthInterceptor.MEMBER_ID_ATTRIBUTE) Long memberId,
+            @Valid @RequestBody MemberUpdateRequest request) {
+        MemberInfoResponse response = memberService.updateMyInfo(memberId, request);
+        return ResponseEntity.ok(ApiResponse.success("회원 정보가 수정되었습니다.", response));
     }
 
     /**

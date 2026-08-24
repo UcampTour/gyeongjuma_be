@@ -1,6 +1,8 @@
 package com.ucamp.gyeongjuma_be.admin.controller;
 
 import com.ucamp.gyeongjuma_be.admin.dto.request.QuizCreateRequest;
+import com.ucamp.gyeongjuma_be.admin.dto.request.QuizTranslationRequest;
+import com.ucamp.gyeongjuma_be.admin.dto.response.AdminQuizSetDto;
 import com.ucamp.gyeongjuma_be.admin.dto.response.AdminQuizDetailResponse;
 import com.ucamp.gyeongjuma_be.admin.dto.response.AdminQuizListResponse;
 import com.ucamp.gyeongjuma_be.admin.service.AdminQuizService;
@@ -8,6 +10,8 @@ import com.ucamp.gyeongjuma_be.common.dto.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+
+import java.util.List;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,11 +36,12 @@ public class AdminQuizController {
             @RequestParam(value = "keyword", required = false) String keyword,
             @RequestParam(value = "placeId", required = false) Long placeId,
             @RequestParam(value = "difficulty", required = false) String difficulty,
+            @RequestParam(value = "language", required = false) String language,
             @RequestParam(value = "isActive", required = false) Boolean isActive,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "20") int size) {
         AdminQuizListResponse response =
-                adminQuizService.getQuizSets(keyword, placeId, difficulty, isActive, page, size);
+                adminQuizService.getQuizSets(keyword, placeId, difficulty, language, isActive, page, size);
         return ResponseEntity.ok(ApiResponse.success("퀴즈 목록 조회에 성공했습니다.", response));
     }
 
@@ -63,6 +68,28 @@ public class AdminQuizController {
     /**
      * 4. 퀴즈 문제집 삭제 (문제집·문항 비활성화, 응답 이력은 보존)
      */
+    /**
+     * 4. 번역본 등록 — 원본 세트를 지정해 언어별 세트를 만든다.
+     * 문항마다 originQuizId로 원본 문항을 지정해야 하며, 이 연결이 포인트 중복 지급을 막는다.
+     */
+    @PostMapping("/{placeQuizInfoId}/translations")
+    public ResponseEntity<ApiResponse<AdminQuizDetailResponse>> createTranslation(
+            @PathVariable Long placeQuizInfoId,
+            @Valid @RequestBody QuizTranslationRequest request) {
+        AdminQuizDetailResponse response = adminQuizService.createTranslation(placeQuizInfoId, request);
+        return ResponseEntity.ok(ApiResponse.success("번역본을 등록했습니다.", response));
+    }
+
+    /**
+     * 5. 번역본 목록 — 해당 원본 세트의 언어별 번역본
+     */
+    @GetMapping("/{placeQuizInfoId}/translations")
+    public ResponseEntity<ApiResponse<List<AdminQuizSetDto>>> getTranslations(
+            @PathVariable Long placeQuizInfoId) {
+        List<AdminQuizSetDto> response = adminQuizService.getTranslations(placeQuizInfoId);
+        return ResponseEntity.ok(ApiResponse.success("번역본 목록을 조회했습니다.", response));
+    }
+
     @DeleteMapping("/{placeQuizInfoId}")
     public ResponseEntity<ApiResponse<Void>> deleteQuizSet(@PathVariable Long placeQuizInfoId) {
         adminQuizService.deleteQuizSet(placeQuizInfoId);

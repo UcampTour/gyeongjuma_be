@@ -27,12 +27,20 @@ public record QuizCreateRequest(
         @Pattern(regexp = "^$|^(?i)(EASY|NORMAL|HARD)$", message = "난이도는 EASY, NORMAL, HARD 중 하나여야 합니다.")
         String difficulty,
 
+        // ko, en 등 언어 코드 (생략 시 ko)
+        @Pattern(regexp = "^$|^[a-zA-Z]{2}(-[a-zA-Z]{2,4})?$", message = "언어 코드 형식이 올바르지 않습니다. (예: ko, en)")
+        String language,
+
         @NotEmpty(message = "문항은 1개 이상이어야 합니다.")
         @Valid
         List<QuestionRequest> questions
 ) {
     public String difficultyOrDefault() {
         return (difficulty == null || difficulty.isBlank()) ? "NORMAL" : difficulty.toUpperCase();
+    }
+
+    public String languageOrDefault() {
+        return (language == null || language.isBlank()) ? "ko" : language.toLowerCase();
     }
 
     public record QuestionRequest(

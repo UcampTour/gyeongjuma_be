@@ -17,6 +17,9 @@
             <if test="difficulty != null and difficulty != ''">
                 AND pqi.difficulty = #{difficulty}
             </if>
+            <if test="language != null and language != ''">
+                AND pqi.language = #{language}
+            </if>
             <if test="isActive != null">
                 AND pqi.is_active = #{isActive}
             </if>
@@ -30,6 +33,8 @@
         pqi.title              AS title,
         pqi.description        AS description,
         pqi.difficulty         AS difficulty,
+        pqi.language           AS language,
+        pqi.origin_info_id     AS originInfoId,
         pqi.is_active          AS isActive,
         pqi.created_at         AS createdAt,
         pqi.deleted_at         AS deletedAt,
@@ -63,9 +68,10 @@
     </select>
 
     <select id="findQuestionsBySetId" resultType="com.ucamp.gyeongjuma_be.admin.dto.response.AdminQuizQuestionDto">
-        SELECT q.quiz_id   AS quizId,
-               q.question  AS question,
-               q.is_active AS isActive
+        SELECT q.quiz_id       AS quizId,
+               q.question      AS question,
+               q.origin_quiz_id AS originQuizId,
+               q.is_active     AS isActive
           FROM place_quiz pq
           JOIN quiz q ON q.quiz_id = pq.quiz_id
          WHERE pq.place_quiz_info_id = #{placeQuizInfoId}
@@ -92,15 +98,15 @@
     </select>
 
     <insert id="insertQuizSet">
-        INSERT INTO place_quiz_info (place_id, title, description, difficulty,
-                                     created_at, updated_at, is_active)
-        VALUES (#{placeId}, #{title}, #{description}, #{difficulty},
-                #{createdAt}, #{createdAt}, TRUE)
+        INSERT INTO place_quiz_info (place_id, title, description, difficulty, language,
+                                     origin_info_id, created_at, updated_at, is_active)
+        VALUES (#{placeId}, #{title}, #{description}, #{difficulty}, #{language},
+                #{originInfoId}, #{createdAt}, #{createdAt}, TRUE)
     </insert>
 
     <insert id="insertQuestion">
-        INSERT INTO quiz (question, created_at, updated_at, is_active)
-        VALUES (#{question}, #{createdAt}, #{createdAt}, TRUE)
+        INSERT INTO quiz (question, origin_quiz_id, created_at, updated_at, is_active)
+        VALUES (#{question}, #{originQuizId}, #{createdAt}, #{createdAt}, TRUE)
     </insert>
 
     <insert id="insertAnswer">
@@ -115,6 +121,34 @@
 
     <select id="findLastInsertId" resultType="long">
         SELECT LAST_INSERT_ID()
+    </select>
+
+    <select id="existsTranslation" resultType="boolean">
+        SELECT EXISTS (
+            SELECT 1
+              FROM place_quiz_info
+             WHERE origin_info_id = #{originInfoId}
+               AND language       = #{language}
+               AND is_active      = TRUE
+        )
+    </select>
+
+    <select id="findQuizIdsBySetId" resultType="long">
+        SELECT q.quiz_id
+          FROM place_quiz pq
+          JOIN quiz q ON q.quiz_id = pq.quiz_id
+         WHERE pq.place_quiz_info_id = #{placeQuizInfoId}
+           AND q.is_active = TRUE
+      ORDER BY q.quiz_id
+    </select>
+
+    <select id="findTranslationsByOriginId"
+            resultType="com.ucamp.gyeongjuma_be.admin.dto.response.AdminQuizSetDto">
+        SELECT <include refid="quizSetColumns"/>
+          FROM place_quiz_info pqi
+          JOIN place p ON p.place_id = pqi.place_id
+         WHERE pqi.origin_info_id = #{originInfoId}
+      ORDER BY pqi.language, pqi.place_quiz_info_id
     </select>
 
     <!-- 응답 이력(member_quiz_response)이 문항을 참조하므로 물리 삭제 없이 비활성화만 한다 -->
