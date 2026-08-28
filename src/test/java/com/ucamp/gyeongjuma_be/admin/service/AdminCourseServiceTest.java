@@ -39,7 +39,7 @@ class AdminCourseServiceTest {
     AdminCourseServiceImpl adminCourseService;
 
     private CourseCreateRequest request(List<Long> placeIds) {
-        return new CourseCreateRequest("경주 역사 탐방", "반나절 코스", "https://img/c.png", placeIds);
+        return new CourseCreateRequest("경주 역사 탐방", "반나절 코스", "https://img/c.png", "WALK", placeIds);
     }
 
     private void stubDetailLookup(Long courseId, int placeCnt) {

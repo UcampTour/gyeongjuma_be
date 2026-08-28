@@ -12,6 +12,7 @@ public record AdminCourseDetailResponse(
         String name,
         String description,
         String thumbnailUrl,
+        String type,
         Long placeCnt,
         Boolean isActive,
 

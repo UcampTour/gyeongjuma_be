@@ -116,6 +116,7 @@ public class AdminCourseServiceImpl implements AdminCourseService {
                 .name(course.getName())
                 .description(course.getDescription())
                 .thumbnailUrl(course.getThumbnailUrl())
+                .type(course.getType())
                 .placeCnt(course.getPlaceCnt())
                 .isActive(course.getIsActive())
                 .createdAt(course.getCreatedAt())

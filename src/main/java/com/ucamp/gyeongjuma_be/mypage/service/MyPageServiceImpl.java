@@ -36,8 +36,13 @@ public class MyPageServiceImpl implements MyPageService {
                 .profileImage(member.getProfileImgUrl())
                 .difficulty(member.getDifficulty())
                 .point(member.getPoint())
+                // 누적 포인트는 member.point 기준. point_history 합계는 초기 데이터에
+                // 이력 없이 포인트만 심어진 회원이 있어 실제 보유량과 어긋난다.
+                .totalPoint(member.getPoint())
                 .distance(member.getDistance())
                 .visitPlaceCnt(myPageRepository.countVisitedPlacesByMemberId(memberId))
+                .quizCount(myPageRepository.countCompletedQuizSetsByMemberId(memberId))
+                .courseCount(myPageRepository.countCompletedCoursesByMemberId(memberId))
                 .build();
     }
 
