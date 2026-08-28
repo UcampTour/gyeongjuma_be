@@ -29,6 +29,62 @@
          WHERE member_id = #{memberId}
     </select>
 
+    <!--
+      완료한 퀴즈 수: 세트에 속한 활성 문항을 "전부" 푼 세트를 센다.
+      퀴즈 목록 화면과 같은 조건(회원의 난이도·언어, 장소 활성)을 걸어
+      화면에 보이는 세트 기준으로만 집계한다 — 두 화면의 숫자가 어긋나지 않게 하기 위함이다.
+      회원이 난이도나 언어를 바꾸면 이 값도 함께 바뀐다.
+    -->
+    <select id="countCompletedQuizSetsByMemberId" resultType="long">
+        SELECT COUNT(*)
+          FROM (
+                SELECT pqi.place_quiz_info_id
+                  FROM member m
+                  JOIN place_quiz_info pqi
+                    ON pqi.difficulty = m.difficulty
+                   AND pqi.language   = m.locale
+                   AND pqi.is_active  = TRUE
+                  JOIN place p
+                    ON p.place_id = pqi.place_id
+                   AND p.is_active = TRUE
+                  JOIN place_quiz pq
+                    ON pq.place_quiz_info_id = pqi.place_quiz_info_id
+                  JOIN quiz q
+                    ON q.quiz_id = pq.quiz_id
+                   AND q.is_active = TRUE
+             LEFT JOIN member_quiz_response mqr
+                    ON mqr.quiz_id   = q.quiz_id
+                   AND mqr.member_id = m.member_id
+                 WHERE m.member_id = #{memberId}
+              GROUP BY pqi.place_quiz_info_id
+                HAVING COUNT(DISTINCT q.quiz_id) = COUNT(DISTINCT mqr.quiz_id)
+               ) completed
+    </select>
+
+    <!--
+      완주한 코스 수: 코스 진행도 조회와 같은 규칙(담긴 장소를 모두 방문했으면 완주)으로 센다.
+      두 화면의 숫자가 어긋나지 않도록 분모에서 비활성 장소를 빼는 것도 동일하게 맞춘다.
+    -->
+    <select id="countCompletedCoursesByMemberId" resultType="long">
+        SELECT COUNT(*)
+          FROM (
+                SELECT c.course_id
+                  FROM course c
+                  JOIN course_place cp
+                    ON cp.course_id = c.course_id
+                  JOIN place p
+                    ON p.place_id = cp.place_id
+                   AND p.is_active = TRUE
+             LEFT JOIN (SELECT DISTINCT place_id
+                          FROM visit
+                         WHERE member_id = #{memberId}) v
+                    ON v.place_id = cp.place_id
+                 WHERE c.is_active = TRUE
+              GROUP BY c.course_id
+                HAVING COUNT(v.place_id) = COUNT(cp.course_place_id)
+               ) completed
+    </select>
+
     <!-- 스탬프: 전체 스탬프 목록 + 회원의 획득 여부/획득 일시 -->
     <select id="findStampsByMemberId" resultType="com.ucamp.gyeongjuma_be.mypage.dto.response.StampDto">
         SELECT

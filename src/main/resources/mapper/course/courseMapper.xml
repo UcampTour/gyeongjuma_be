@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ucamp.gyeongjuma_be.course.repository.CourseRepository">
+
+    <sql id="courseColumns">
+        c.course_id                 AS courseId,
+        c.name                      AS title,
+        c.description               AS description,
+        c.type                      AS type,
+        NULLIF(c.thumbnail_url, '') AS thumbnailUrl,
+        c.place_cnt                 AS placeCnt
+    </sql>
+
+    <select id="findCourses" resultType="com.ucamp.gyeongjuma_be.course.dto.response.CourseDto">
+        SELECT <include refid="courseColumns"/>
+          FROM course c
+         WHERE c.is_active = TRUE
+      ORDER BY c.created_at DESC, c.course_id DESC
+    </select>
+
+    <select id="findCourseById" resultType="com.ucamp.gyeongjuma_be.course.dto.response.CourseDto">
+        SELECT <include refid="courseColumns"/>
+          FROM course c
+         WHERE c.is_active = TRUE
+           AND c.course_id = #{courseId}
+    </select>
+
+    <select id="findCoursePlaces" resultType="com.ucamp.gyeongjuma_be.course.dto.response.CoursePlaceDto">
+        SELECT cp.sort_order                               AS courseSeqNo,
+               p.place_id                                  AS placeId,
+               p.place_name                                AS placeName,
+               NULLIF(p.first_image, '')                   AS image,
+               CONCAT_WS(' ', p.add1, NULLIF(p.add2, ''))  AS address,
+               p.map_y                                     AS latitude,
+               p.map_x                                     AS longitude
+          FROM course_place cp
+          JOIN place p
+            ON p.place_id = cp.place_id
+           AND p.is_active = TRUE
+         WHERE cp.course_id = #{courseId}
+      ORDER BY cp.sort_order ASC, cp.course_place_id ASC
+    </select>
+
+</mapper>

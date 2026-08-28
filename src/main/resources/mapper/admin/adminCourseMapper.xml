@@ -20,6 +20,7 @@
         c.name          AS name,
         c.description   AS description,
         c.thumbnail_url AS thumbnailUrl,
+        c.type          AS type,
         c.place_cnt     AS placeCnt,
         c.is_active     AS isActive,
         c.created_at    AS createdAt,
@@ -48,9 +49,10 @@
 
     <!-- created_at/updated_at은 NOW()(UTC 세션) 대신 앱에서 KST를 넘겨받는다 -->
     <insert id="insertCourse">
-        INSERT INTO course (name, description, thumbnail_url, place_cnt,
+        INSERT INTO course (name, description, thumbnail_url, type, place_cnt,
                             created_at, updated_at, is_active)
-        VALUES (#{request.name}, #{request.description}, #{request.thumbnailUrl}, #{placeCnt},
+        VALUES (#{request.name}, #{request.description}, #{request.thumbnailUrl},
+                #{request.typeOrDefault}, #{placeCnt},
                 #{createdAt}, #{createdAt}, TRUE)
     </insert>
 
