@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ucamp.gyeongjuma_be.favorite.repository.FavoriteRepository">
+    <insert id="save" useGeneratedKeys="true" keyProperty="favoriteId">
+        INSERT INTO favorite (member_id, place_id)
+        VALUES (#{memberId}, #{placeId})
+        ON DUPLICATE KEY UPDATE favorite_id = LAST_INSERT_ID(favorite_id)
+    </insert>
+
+    <select id="findIdByMemberIdAndPlaceId" resultType="long">
+        SELECT favorite_id
+        FROM favorite
+        WHERE member_id = #{memberId}
+          AND place_id = #{placeId}
+    </select>
+
+    <delete id="deleteByMemberIdAndPlaceId">
+        DELETE FROM favorite
+        WHERE member_id = #{memberId}
+          AND place_id = #{placeId}
+    </delete>
+</mapper>
