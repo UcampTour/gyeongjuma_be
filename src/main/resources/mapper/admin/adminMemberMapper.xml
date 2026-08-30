@@ -113,6 +113,24 @@
            AND is_active                = TRUE
     </update>
 
+    <update id="updateNickname">
+        UPDATE member
+           SET nickname   = #{nickname},
+               updated_at = #{updatedAt}
+         WHERE member_id  = #{memberId}
+           AND is_active  = TRUE
+    </update>
+
+    <select id="existsByNicknameExcludingMember" resultType="boolean">
+        SELECT EXISTS (
+            SELECT 1
+              FROM member
+             WHERE nickname   = #{nickname}
+               AND is_active  = TRUE
+               AND member_id &lt;&gt; #{memberId}
+        )
+    </select>
+
     <update id="addPoint">
         UPDATE member
            SET `point`   = `point` + #{amount}

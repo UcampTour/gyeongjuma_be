@@ -5,7 +5,7 @@ import com.ucamp.gyeongjuma_be.course.dto.response.CourseListResponse;
 
 public interface CourseService {
 
-    CourseListResponse getCourses();
+    CourseListResponse getCourses(Long memberId);
 
-    CourseDetailResponse getCourseDetail(Long courseId);
+    CourseDetailResponse getCourseDetail(Long memberId, Long courseId);
 }
