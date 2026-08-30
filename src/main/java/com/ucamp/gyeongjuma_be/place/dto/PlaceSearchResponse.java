@@ -10,11 +10,8 @@ public class PlaceSearchResponse {
 
     private Long placeId;
     private String placeName;
-    private String description;
+    private PlaceDescription description;
     private String category;
-    private Double rating;
-    private Long reviewCount;
-    private Long likes;
     private Long visitCnt; // 방문자수 추가
     private Double lat;
     private Double lng;
