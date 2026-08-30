@@ -18,6 +18,7 @@ public enum ErrorCode {
     DUPLICATE_EMAIL(HttpStatus.BAD_REQUEST, "M002", "이미 가입된 이메일입니다."),
     DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "M003", "이미 사용 중인 닉네임입니다."),
     ALREADY_WITHDRAWN_MEMBER(HttpStatus.BAD_REQUEST, "M004", "이미 탈퇴한 회원입니다."),
+    DUPLICATE_POINT_HISTORY(HttpStatus.CONFLICT, "M005", "같은 사유의 포인트 조정 이력이 이미 있습니다. 사유를 다르게 입력해 주세요."),
 
     // Auth (인증/인가)
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "A001", "인증이 필요합니다."),

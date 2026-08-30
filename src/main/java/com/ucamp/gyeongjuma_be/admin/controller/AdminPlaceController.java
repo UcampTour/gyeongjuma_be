@@ -1,7 +1,10 @@
 package com.ucamp.gyeongjuma_be.admin.controller;
 
+import com.ucamp.gyeongjuma_be.admin.dto.request.PlaceContentUpsertRequest;
 import com.ucamp.gyeongjuma_be.admin.dto.request.PlaceCreateRequest;
 import com.ucamp.gyeongjuma_be.admin.dto.response.AdminPlaceDto;
+import com.ucamp.gyeongjuma_be.admin.dto.response.AdminPlaceItemDto;
+import com.ucamp.gyeongjuma_be.admin.dto.response.AdminPlaceItemListResponse;
 import com.ucamp.gyeongjuma_be.admin.dto.response.AdminPlaceListResponse;
 import com.ucamp.gyeongjuma_be.admin.service.AdminPlaceService;
 import com.ucamp.gyeongjuma_be.common.dto.ApiResponse;
@@ -13,6 +16,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -46,6 +50,50 @@ public class AdminPlaceController {
             @Valid @RequestBody PlaceCreateRequest request) {
         AdminPlaceDto response = adminPlaceService.createPlace(request);
         return ResponseEntity.ok(ApiResponse.success("관광지를 추가했습니다.", response));
+    }
+
+    /**
+     * 3. 관광지 관리 목록 — 관광지 + 언어·난이도별 해설
+     */
+    @GetMapping("/contents")
+    public ResponseEntity<ApiResponse<AdminPlaceItemListResponse>> getPlaceItems(
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "isActive", required = false) Boolean isActive,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size) {
+        AdminPlaceItemListResponse response = adminPlaceService.getPlaceItems(keyword, isActive, page, size);
+        return ResponseEntity.ok(ApiResponse.success("관광지 해설 목록을 조회했습니다.", response));
+    }
+
+    /**
+     * 4. 관광지 해설 단건 조회
+     */
+    @GetMapping("/{placeId}/contents")
+    public ResponseEntity<ApiResponse<AdminPlaceItemDto>> getPlaceItem(@PathVariable Long placeId) {
+        AdminPlaceItemDto response = adminPlaceService.getPlaceItem(placeId);
+        return ResponseEntity.ok(ApiResponse.success("관광지 해설을 조회했습니다.", response));
+    }
+
+    /**
+     * 5. 관광지 해설 등록·수정 — 같은 (언어, 난이도) 해설이 있으면 내용을 교체한다
+     */
+    @PutMapping("/{placeId}/contents")
+    public ResponseEntity<ApiResponse<AdminPlaceItemDto>> upsertContent(
+            @PathVariable Long placeId,
+            @Valid @RequestBody PlaceContentUpsertRequest request) {
+        AdminPlaceItemDto response = adminPlaceService.upsertContent(placeId, request);
+        return ResponseEntity.ok(ApiResponse.success("관광지 해설을 저장했습니다.", response));
+    }
+
+    /**
+     * 6. 관광지 해설 삭제
+     */
+    @DeleteMapping("/{placeId}/contents/{placeContentId}")
+    public ResponseEntity<ApiResponse<Void>> deleteContent(
+            @PathVariable Long placeId,
+            @PathVariable Long placeContentId) {
+        adminPlaceService.deleteContent(placeId, placeContentId);
+        return ResponseEntity.ok(ApiResponse.success("관광지 해설을 삭제했습니다.", null));
     }
 
     /**

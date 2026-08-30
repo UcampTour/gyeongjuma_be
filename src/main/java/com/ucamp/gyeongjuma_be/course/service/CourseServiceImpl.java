@@ -25,8 +25,8 @@ public class CourseServiceImpl implements CourseService {
     private final CourseRepository courseRepository;
 
     @Override
-    public CourseListResponse getCourses() {
-        List<CourseDto> courses = courseRepository.findCourses();
+    public CourseListResponse getCourses(Long memberId) {
+        List<CourseDto> courses = courseRepository.findCourses(memberId);
 
         return CourseListResponse.builder()
                 .totalCnt(courses.size())
@@ -35,8 +35,8 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
-    public CourseDetailResponse getCourseDetail(Long courseId) {
-        CourseDto course = courseRepository.findCourseById(courseId);
+    public CourseDetailResponse getCourseDetail(Long memberId, Long courseId) {
+        CourseDto course = courseRepository.findCourseById(memberId, courseId);
         if (course == null) {
             throw new CustomException(ErrorCode.COURSE_NOT_FOUND);
         }

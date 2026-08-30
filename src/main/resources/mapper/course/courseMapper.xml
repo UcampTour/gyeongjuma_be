@@ -3,18 +3,32 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ucamp.gyeongjuma_be.course.repository.CourseRepository">
 
+    <!--
+      제목·설명은 회원 언어(member.locale)의 course_content를 우선 쓰고,
+      그 언어 번역이 없으면 ko로, ko도 없으면 course.name(등록 시 복사해 둔 기본값)으로 떨어진다.
+    -->
     <sql id="courseColumns">
-        c.course_id                 AS courseId,
-        c.name                      AS title,
-        c.description               AS description,
-        c.type                      AS type,
-        NULLIF(c.thumbnail_url, '') AS thumbnailUrl,
-        c.place_cnt                 AS placeCnt
+        c.course_id                                                    AS courseId,
+        COALESCE(cc.course_name, ko.course_name, c.name)               AS title,
+        COALESCE(cc.description, ko.description, c.description)        AS description,
+        c.type                                                         AS type,
+        NULLIF(c.thumbnail_url, '')                                    AS thumbnailUrl,
+        c.place_cnt                                                    AS placeCnt
+    </sql>
+
+    <sql id="courseContentJoins">
+     LEFT JOIN course_content cc
+            ON cc.course_id = c.course_id
+           AND cc.language  = (SELECT m.locale FROM member m WHERE m.member_id = #{memberId})
+     LEFT JOIN course_content ko
+            ON ko.course_id = c.course_id
+           AND ko.language  = 'ko'
     </sql>
 
     <select id="findCourses" resultType="com.ucamp.gyeongjuma_be.course.dto.response.CourseDto">
         SELECT <include refid="courseColumns"/>
           FROM course c
+        <include refid="courseContentJoins"/>
          WHERE c.is_active = TRUE
       ORDER BY c.created_at DESC, c.course_id DESC
     </select>
@@ -22,6 +36,7 @@
     <select id="findCourseById" resultType="com.ucamp.gyeongjuma_be.course.dto.response.CourseDto">
         SELECT <include refid="courseColumns"/>
           FROM course c
+        <include refid="courseContentJoins"/>
          WHERE c.is_active = TRUE
            AND c.course_id = #{courseId}
     </select>

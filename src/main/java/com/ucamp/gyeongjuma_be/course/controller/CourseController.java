@@ -1,5 +1,6 @@
 package com.ucamp.gyeongjuma_be.course.controller;
 
+import com.ucamp.gyeongjuma_be.auth.AuthInterceptor;
 import com.ucamp.gyeongjuma_be.common.dto.ApiResponse;
 import com.ucamp.gyeongjuma_be.course.dto.response.CourseDetailResponse;
 import com.ucamp.gyeongjuma_be.course.dto.response.CourseListResponse;
@@ -8,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -22,8 +24,9 @@ public class CourseController {
      * 1. 코스 목록 (코스 조회 화면)
      */
     @GetMapping
-    public ResponseEntity<ApiResponse<CourseListResponse>> getCourses() {
-        CourseListResponse response = courseService.getCourses();
+    public ResponseEntity<ApiResponse<CourseListResponse>> getCourses(
+            @RequestAttribute(AuthInterceptor.MEMBER_ID_ATTRIBUTE) Long memberId) {
+        CourseListResponse response = courseService.getCourses(memberId);
         return ResponseEntity.ok(ApiResponse.success("코스 목록 조회에 성공했습니다.", response));
     }
 
@@ -32,8 +35,9 @@ public class CourseController {
      */
     @GetMapping("/{courseId}")
     public ResponseEntity<ApiResponse<CourseDetailResponse>> getCourseDetail(
+            @RequestAttribute(AuthInterceptor.MEMBER_ID_ATTRIBUTE) Long memberId,
             @PathVariable Long courseId) {
-        CourseDetailResponse response = courseService.getCourseDetail(courseId);
+        CourseDetailResponse response = courseService.getCourseDetail(memberId, courseId);
         return ResponseEntity.ok(ApiResponse.success("코스 상세 조회에 성공했습니다.", response));
     }
 }

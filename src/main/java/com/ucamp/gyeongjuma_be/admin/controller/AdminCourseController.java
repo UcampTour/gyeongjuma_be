@@ -1,8 +1,11 @@
 package com.ucamp.gyeongjuma_be.admin.controller;
 
 import com.ucamp.gyeongjuma_be.admin.dto.request.CourseCreateRequest;
+import com.ucamp.gyeongjuma_be.admin.dto.request.CourseUpsertRequest;
 import com.ucamp.gyeongjuma_be.admin.dto.response.AdminCourseDetailResponse;
 import com.ucamp.gyeongjuma_be.admin.dto.response.AdminCourseDto;
+import com.ucamp.gyeongjuma_be.admin.dto.response.AdminCourseItemDto;
+import com.ucamp.gyeongjuma_be.admin.dto.response.AdminCourseItemListResponse;
 import com.ucamp.gyeongjuma_be.admin.dto.response.AdminCourseListResponse;
 import com.ucamp.gyeongjuma_be.admin.service.AdminCourseService;
 import com.ucamp.gyeongjuma_be.common.dto.ApiResponse;
@@ -14,6 +17,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -57,6 +61,49 @@ public class AdminCourseController {
             @Valid @RequestBody CourseCreateRequest request) {
         AdminCourseDetailResponse response = adminCourseService.createCourse(request);
         return ResponseEntity.ok(ApiResponse.success("코스를 등록했습니다.", response));
+    }
+
+    /**
+     * 4. 코스 관리 목록 — 코스 + 담긴 장소 + 언어별 이름·설명
+     */
+    @GetMapping("/manage")
+    public ResponseEntity<ApiResponse<AdminCourseItemListResponse>> getCourseItems(
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "isUse", required = false) Boolean isUse,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size) {
+        AdminCourseItemListResponse response = adminCourseService.getCourseItems(keyword, isUse, page, size);
+        return ResponseEntity.ok(ApiResponse.success("코스 목록을 조회했습니다.", response));
+    }
+
+    /**
+     * 5. 코스 관리 상세
+     */
+    @GetMapping("/manage/{courseId}")
+    public ResponseEntity<ApiResponse<AdminCourseItemDto>> getCourseItem(@PathVariable Long courseId) {
+        AdminCourseItemDto response = adminCourseService.getCourseItem(courseId);
+        return ResponseEntity.ok(ApiResponse.success("코스 상세를 조회했습니다.", response));
+    }
+
+    /**
+     * 6. 코스 등록 — 장소 목록과 언어별 이름·설명을 함께 저장한다
+     */
+    @PostMapping("/manage")
+    public ResponseEntity<ApiResponse<AdminCourseItemDto>> createCourseItem(
+            @Valid @RequestBody CourseUpsertRequest request) {
+        AdminCourseItemDto response = adminCourseService.createCourseItem(request);
+        return ResponseEntity.ok(ApiResponse.success("코스를 등록했습니다.", response));
+    }
+
+    /**
+     * 7. 코스 수정 — 장소 목록과 언어별 콘텐츠를 통째로 교체한다
+     */
+    @PutMapping("/manage/{courseId}")
+    public ResponseEntity<ApiResponse<AdminCourseItemDto>> updateCourseItem(
+            @PathVariable Long courseId,
+            @Valid @RequestBody CourseUpsertRequest request) {
+        AdminCourseItemDto response = adminCourseService.updateCourseItem(courseId, request);
+        return ResponseEntity.ok(ApiResponse.success("코스를 수정했습니다.", response));
     }
 
     /**
