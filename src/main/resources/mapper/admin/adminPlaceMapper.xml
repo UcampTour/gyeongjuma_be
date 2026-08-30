@@ -70,6 +70,80 @@
         SELECT LAST_INSERT_ID()
     </select>
 
+    <!--
+      관광지 관리 화면용 목록. 해설(contents)은 별도 조회로 묶는다.
+      category는 관광공사 분류 코드(content_type_id, lcls_systm*)를 그대로 쓰기 어려워
+      매핑 규칙이 정해질 때까지 null로 내려준다 — 프론트가 나중에 값을 채워도 계약이 안 바뀐다.
+    -->
+    <select id="findPlaceItems" resultType="com.ucamp.gyeongjuma_be.admin.dto.response.AdminPlaceItemDto">
+        SELECT p.place_id   AS placeId,
+               p.place_name AS placeName,
+               NULL         AS category,
+               p.is_active  AS isActive
+          FROM place p
+        <include refid="placeSearchWhere"/>
+      ORDER BY p.place_id ASC
+         LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <select id="findPlaceItemById" resultType="com.ucamp.gyeongjuma_be.admin.dto.response.AdminPlaceItemDto">
+        SELECT p.place_id   AS placeId,
+               p.place_name AS placeName,
+               NULL         AS category,
+               p.is_active  AS isActive
+          FROM place p
+         WHERE p.place_id = #{placeId}
+    </select>
+
+    <select id="findContentsByPlaceIds"
+            resultType="com.ucamp.gyeongjuma_be.admin.dto.response.AdminPlaceContentDto">
+        SELECT pc.place_content_id   AS placeContentId,
+               pc.difficulty         AS difficulty,
+               pc.language           AS language,
+               pc.description        AS description,
+               pc.place_id           AS placeId
+          FROM place_content pc
+         WHERE pc.place_id IN
+        <foreach collection="placeIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+      ORDER BY pc.place_id, pc.difficulty, pc.language, pc.place_content_id
+    </select>
+
+    <select id="findContentById"
+            resultType="com.ucamp.gyeongjuma_be.admin.dto.response.AdminPlaceContentDto">
+        SELECT pc.place_content_id   AS placeContentId,
+               pc.difficulty         AS difficulty,
+               pc.language           AS language,
+               pc.description        AS description,
+               pc.place_id           AS placeId
+          FROM place_content pc
+         WHERE pc.place_content_id = #{placeContentId}
+    </select>
+
+    <!--
+      같은 (place_id, language, difficulty) 해설이 있으면 내용만 교체한다.
+      place_content에 유니크 제약이 없어 INSERT ... ON DUPLICATE KEY를 쓸 수 없으므로
+      UPDATE를 먼저 시도하고, 바뀐 행이 없을 때만 INSERT 하도록 서비스에서 순서를 잡는다.
+    -->
+    <update id="upsertPlaceContent">
+        UPDATE place_content
+           SET description = #{description}
+         WHERE place_id    = #{placeId}
+           AND language    = #{language}
+           AND difficulty  = #{difficulty}
+    </update>
+
+    <insert id="insertPlaceContent">
+        INSERT INTO place_content (description, language, difficulty, place_id)
+        VALUES (#{description}, #{language}, #{difficulty}, #{placeId})
+    </insert>
+
+    <delete id="deletePlaceContent">
+        DELETE FROM place_content
+         WHERE place_content_id = #{placeContentId}
+    </delete>
+
     <!-- 물리 삭제는 FK(visit·place_content·place_image·place_quiz_info) 때문에 불가하므로 소프트 삭제 -->
     <update id="softDeletePlace">
         UPDATE place

@@ -8,6 +8,7 @@ import com.ucamp.gyeongjuma_be.common.exception.ErrorCode;
 import com.ucamp.gyeongjuma_be.member.domain.Member;
 import com.ucamp.gyeongjuma_be.member.dto.request.ExtraInfoRequest;
 import com.ucamp.gyeongjuma_be.member.dto.request.LoginRequest;
+import com.ucamp.gyeongjuma_be.member.dto.request.MemberUpdateRequest;
 import com.ucamp.gyeongjuma_be.member.dto.response.LoginResult;
 import com.ucamp.gyeongjuma_be.member.dto.response.MemberInfoResponse;
 import com.ucamp.gyeongjuma_be.member.dto.response.NicknameCheckResponse;
@@ -19,6 +20,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 @Slf4j
@@ -125,6 +128,41 @@ public class MemberServiceImpl implements MemberService {
                 .profileImage(member.getProfileImgUrl())
                 .difficulty(request.difficultyOrDefault())
                 .locale(request.localeOrDefault())
+                .build();
+    }
+
+    /**
+     * 닉네임·난이도·언어 부분 수정.
+     * 요청에 없는(null) 필드는 기존 값을 유지한다 — 등록용 registerExtraInfo와 달리 기본값으로 덮어쓰지 않는다.
+     */
+    @Override
+    @Transactional
+    public MemberInfoResponse updateMyInfo(Long memberId, MemberUpdateRequest request) {
+        Member member = getActiveMember(memberId);
+
+        if (request.isEmpty()) {
+            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+
+        String nickname = request.nickname();
+        // 본인이 이미 쓰고 있는 닉네임이면 중복 검사를 건너뛴다
+        if (nickname != null && !nickname.equals(member.getNickname())
+                && memberRepository.existsByNickname(nickname)) {
+            throw new CustomException(ErrorCode.DUPLICATE_NICKNAME);
+        }
+
+        String difficulty = request.normalizedDifficulty();
+        String locale = request.normalizedLocale();
+
+        memberRepository.updateProfile(memberId, nickname, difficulty, locale,
+                LocalDateTime.now(ZoneId.of("Asia/Seoul")));
+
+        return MemberInfoResponse.builder()
+                .memberId(memberId)
+                .nickname(nickname != null ? nickname : member.getNickname())
+                .profileImage(member.getProfileImgUrl())
+                .difficulty(difficulty != null ? difficulty : member.getDifficulty())
+                .locale(locale != null ? locale : member.getLocale())
                 .build();
     }
 

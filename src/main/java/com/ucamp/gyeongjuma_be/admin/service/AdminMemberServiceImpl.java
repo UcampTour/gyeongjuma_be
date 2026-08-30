@@ -1,5 +1,6 @@
 package com.ucamp.gyeongjuma_be.admin.service;
 
+import com.ucamp.gyeongjuma_be.admin.dto.request.MemberUpdateAdminRequest;
 import com.ucamp.gyeongjuma_be.admin.dto.request.PointAdjustRequest;
 import com.ucamp.gyeongjuma_be.admin.dto.response.AdminMemberDetailDto;
 import com.ucamp.gyeongjuma_be.admin.dto.response.AdminMemberDto;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.ZoneId;
 import java.util.List;
 
@@ -21,6 +23,11 @@ import java.util.List;
 public class AdminMemberServiceImpl implements AdminMemberService {
 
     private static final ZoneId KST = ZoneId.of("Asia/Seoul");
+    /** 밀리초까지 넣는다 — 초 단위로는 연속 조정이 같은 초에 겹쳐 유니크 제약에 걸린다 */
+    private static final DateTimeFormatter DESCRIPTION_TIME =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+    /** point_history.description 컬럼 길이 */
+    private static final int DESCRIPTION_MAX_LENGTH = 100;
 
     private final AdminMemberRepository adminMemberRepository;
 
@@ -67,11 +74,64 @@ public class AdminMemberServiceImpl implements AdminMemberService {
             throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
         }
 
+        LocalDateTime now = LocalDateTime.now(KST);
         adminMemberRepository.addPoint(memberId, request.amount());
         adminMemberRepository.insertPointHistory(memberId, request.amount(),
-                request.reasonOrDefault(), LocalDateTime.now(KST));
+                buildDescription(request.reasonOrDefault(), now), now);
 
         return adminMemberRepository.findMemberDetail(memberId);
+    }
+
+    /**
+     * 관리자 회원 수정 — 닉네임과 포인트를 한 트랜잭션에서 처리한다.
+     * 보내지 않은 항목은 건드리지 않으며, 포인트는 증감분(pointAmount)으로 받는다.
+     */
+    @Override
+    @Transactional
+    public AdminMemberDetailDto updateMember(Long memberId, MemberUpdateAdminRequest request) {
+        AdminMemberDetailDto member = getExistingMember(memberId);
+        if (Boolean.FALSE.equals(member.getIsActive())) {
+            throw new CustomException(ErrorCode.ALREADY_WITHDRAWN_MEMBER);
+        }
+        if (request.isEmpty()) {
+            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+
+        LocalDateTime now = LocalDateTime.now(KST);
+
+        String nickname = request.nickname();
+        if (nickname != null && !nickname.equals(member.getNickname())) {
+            // 탈퇴 회원은 닉네임을 반납하므로 활성 회원 중에서만 중복을 본다
+            if (adminMemberRepository.existsByNicknameExcludingMember(memberId, nickname)) {
+                throw new CustomException(ErrorCode.DUPLICATE_NICKNAME);
+            }
+            adminMemberRepository.updateNickname(memberId, nickname, now);
+        }
+
+        if (request.hasPointChange()) {
+            long current = member.getPoint() == null ? 0L : member.getPoint();
+            if (current + request.pointAmount() < 0) {
+                throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
+            }
+            adminMemberRepository.addPoint(memberId, request.pointAmount());
+            adminMemberRepository.insertPointHistory(memberId, request.pointAmount(),
+                    buildDescription(request.reasonOrDefault(), now), now);
+        }
+
+        return adminMemberRepository.findMemberDetail(memberId);
+    }
+
+    /**
+     * 이력 사유에 조정 시각을 덧붙인다.
+     * point_history에 (member_id, description) 유니크가 걸려 있어 사유만으로는
+     * 같은 회원을 두 번 조정할 수 없다 — 시각을 붙여 매 조정이 고유해지게 한다.
+     * description 컬럼이 varchar(100)이라 넘치면 사유 쪽을 잘라낸다 (시각은 항상 보존).
+     */
+    private String buildDescription(String reason, LocalDateTime at) {
+        String suffix = " (" + at.format(DESCRIPTION_TIME) + ")";
+        int room = DESCRIPTION_MAX_LENGTH - suffix.length();
+        String trimmed = reason.length() > room ? reason.substring(0, room) : reason;
+        return trimmed + suffix;
     }
 
     private AdminMemberDetailDto getExistingMember(Long memberId) {

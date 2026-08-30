@@ -133,6 +133,7 @@
             lcls_systm1 AS lclsSystm1,
             lcls_systm2 AS lclsSystm2,
             lcls_systm3 AS lclsSystm3,
+            language,
             radius_meters AS radiusMeters,
             parking,
             usetime,
@@ -161,6 +162,14 @@
             COALESCE(pc.normal_description, '') AS normalDescription,
             COALESCE(pc.hard_description, '') AS hardDescription,
             COALESCE(p.lcls_systm3, p.lcls_systm2, p.lcls_systm1, '') AS category,
+            0.0 AS rating, <!-- 추후 구현 예정 -->
+            0 AS reviewCount, <!-- 추후 구현 예정 -->
+            0 AS likes, <!-- 추후 구현 예정 -->
+            (
+                SELECT COUNT(*)
+                FROM visit v
+                WHERE v.place_id = p.place_id
+            ) AS visitCnt, <!-- 방문자수 추가 -->
             p.map_y AS lat,
             p.map_x AS lng,
             p.add1 AS add1,
@@ -258,11 +267,13 @@
             GROUP BY place_id
         ) pc
           ON p.place_id = pc.place_id
+         AND pc.difficulty = (select difficulty from member where member_id = #{memberId})
         LEFT JOIN congestion_log cl
           ON cl.place_id = p.place_id
          AND cl.log_date = CURDATE()
          AND cl.is_active = TRUE
         WHERE p.is_active = TRUE
+          AND p.language = (SELECT locale FROM member WHERE member_id = #{memberId})
         <if test="search != null and search != ''">
           AND p.place_name LIKE CONCAT('%', #{search}, '%')
         </if>

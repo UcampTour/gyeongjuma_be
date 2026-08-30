@@ -14,6 +14,9 @@ public class AdminQuizSetDto {
     private String title;
     private String description;
     private String difficulty;
+    private String language;
+    /** 이 세트가 번역본이면 원본 세트 ID, 원본이면 null */
+    private Long originInfoId;
     private Long questionCnt;
     private Boolean isActive;
 

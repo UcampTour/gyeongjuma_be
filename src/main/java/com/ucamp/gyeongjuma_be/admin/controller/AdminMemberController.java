@@ -1,5 +1,6 @@
 package com.ucamp.gyeongjuma_be.admin.controller;
 
+import com.ucamp.gyeongjuma_be.admin.dto.request.MemberUpdateAdminRequest;
 import com.ucamp.gyeongjuma_be.admin.dto.request.PointAdjustRequest;
 import com.ucamp.gyeongjuma_be.admin.dto.response.AdminMemberDetailDto;
 import com.ucamp.gyeongjuma_be.admin.dto.response.AdminMemberListResponse;
@@ -54,6 +55,18 @@ public class AdminMemberController {
     public ResponseEntity<ApiResponse<Void>> forceWithdraw(@PathVariable Long memberId) {
         adminMemberService.forceWithdraw(memberId);
         return ResponseEntity.ok(ApiResponse.success("회원을 강제 탈퇴 처리했습니다."));
+    }
+
+    /**
+     * 4. 회원 수정 — 닉네임 변경과 포인트 조정을 한 번에 처리한다.
+     * 보내지 않은 항목은 그대로 유지된다.
+     */
+    @PatchMapping("/{memberId}")
+    public ResponseEntity<ApiResponse<AdminMemberDetailDto>> updateMember(
+            @PathVariable Long memberId,
+            @Valid @RequestBody MemberUpdateAdminRequest request) {
+        AdminMemberDetailDto response = adminMemberService.updateMember(memberId, request);
+        return ResponseEntity.ok(ApiResponse.success("회원 정보를 수정했습니다.", response));
     }
 
     /**

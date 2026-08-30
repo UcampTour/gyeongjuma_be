@@ -12,6 +12,7 @@ public class PlaceSearchResponse {
     private String placeName;
     private PlaceDescription description;
     private String category;
+    private Long visitCnt; // 방문자수 추가
     private Double lat;
     private Double lng;
     private Double distance;

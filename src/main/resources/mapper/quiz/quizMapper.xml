@@ -33,6 +33,7 @@
                   FROM member m
                   JOIN place_quiz_info pqi
                     ON pqi.difficulty = m.difficulty
+                   AND pqi.language = m.locale
                    AND pqi.is_active = TRUE
                   JOIN place p
                     ON p.place_id = pqi.place_id
@@ -60,6 +61,9 @@
         <result property="imageUrl" column="image_url"/>
         <result property="title" column="title"/>
         <result property="description" column="description"/>
+        <result property="point" column="point"/>
+        <result property="difficulty" column="difficulty"/>
+        <result property="isActive" column="is_active"/>
         <result property="totalQuestions" column="total_questions"/>
         <result property="correctQuestions" column="correct_questions"/>
         <result property="lastQuestionIndex" column="last_question_index"/>
@@ -83,6 +87,9 @@
                p.first_image AS image_url,
                pqi.title AS title,
                pqi.description AS description,
+               pqi.point AS point,
+               pqi.difficulty AS difficulty,
+               pqi.is_active AS is_active,
                stats.total_questions AS total_questions,
                stats.correct_questions AS correct_questions,
                CASE
@@ -121,6 +128,7 @@
           JOIN place_quiz_info pqi
              ON pqi.place_quiz_info_id = #{placeQuizInfoId}
            AND pqi.difficulty = m.difficulty
+           AND pqi.language = m.locale
            AND pqi.is_active = TRUE
           JOIN place p
             ON p.place_id = pqi.place_id
@@ -144,6 +152,7 @@
                   JOIN place_quiz_info pqi
                      ON pqi.place_quiz_info_id = #{placeQuizInfoId}
                    AND pqi.difficulty = m.difficulty
+                   AND pqi.language = m.locale
                    AND pqi.is_active = TRUE
                   JOIN place_quiz pq
                     ON pq.place_quiz_info_id = pqi.place_quiz_info_id
@@ -204,6 +213,7 @@
           JOIN place_quiz_info pqi
             ON pqi.place_quiz_info_id = #{placeQuizInfoId}
            AND pqi.difficulty = m.difficulty
+           AND pqi.language = m.locale
            AND pqi.is_active = TRUE
           JOIN place_quiz pq
             ON pq.place_quiz_info_id = pqi.place_quiz_info_id
@@ -228,14 +238,24 @@
         VALUES (#{memberId}, #{questionId}, #{selectedOptionId}, #{isCorrect})
     </insert>
 
+    <!--
+      정답 보상은 "같은 문제"당 1회만 지급한다.
+      번역본은 원본과 다른 quiz 행이라 quiz_id만으로 판단하면 언어를 바꿔가며 재획득할 수 있다.
+      그래서 중복 방지 키를 COALESCE(origin_quiz_id, quiz_id) — 즉 원본 문항 ID로 잡는다.
+      원본 문항은 origin_quiz_id가 NULL이라 quiz_id를 그대로 쓰므로 기존 point_history와 호환된다.
+    -->
     <insert id="insertQuizRewardHistoryIfAbsent">
         INSERT INTO point_history (point, description, member_id)
-        SELECT #{point}, CONCAT(#{questionId}, '_', #{memberId}), #{memberId}
-         WHERE NOT EXISTS (
+        SELECT #{point},
+               CONCAT(COALESCE(q.origin_quiz_id, q.quiz_id), '_', #{memberId}),
+               #{memberId}
+          FROM quiz q
+         WHERE q.quiz_id = #{questionId}
+           AND NOT EXISTS (
                    SELECT 1
-                     FROM point_history
-                    WHERE member_id = #{memberId}
-                      AND description = CONCAT(#{questionId}, '_', #{memberId})
+                     FROM point_history ph
+                    WHERE ph.member_id = #{memberId}
+                      AND ph.description = CONCAT(COALESCE(q.origin_quiz_id, q.quiz_id), '_', #{memberId})
                )
     </insert>
 
@@ -270,6 +290,7 @@
           JOIN place_quiz_info pqi
              ON pqi.place_quiz_info_id = #{placeQuizInfoId}
            AND pqi.difficulty = m.difficulty
+           AND pqi.language = m.locale
            AND pqi.is_active = TRUE
           JOIN place_quiz pq
             ON pq.place_quiz_info_id = pqi.place_quiz_info_id
@@ -291,6 +312,7 @@
                   JOIN place_quiz_info pqi
                      ON pqi.place_quiz_info_id = #{placeQuizInfoId}
                    AND pqi.difficulty = m.difficulty
+                   AND pqi.language = m.locale
                    AND pqi.is_active = TRUE
                   JOIN place_quiz pq
                     ON pq.place_quiz_info_id = pqi.place_quiz_info_id
