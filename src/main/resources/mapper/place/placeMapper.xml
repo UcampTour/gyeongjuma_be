@@ -9,6 +9,7 @@
         <id property="placeId" column="place_id"/>
         <result property="placeName" column="place_name"/>
         <result property="category" column="category"/>
+        <result property="visitCnt" column="visitCnt"/>
         <result property="lat" column="lat"/>
         <result property="lng" column="lng"/>
         <result property="add1" column="add1"/>
@@ -161,6 +162,11 @@
             COALESCE(pc.normal_description, '') AS normalDescription,
             COALESCE(pc.hard_description, '') AS hardDescription,
             COALESCE(p.lcls_systm3, p.lcls_systm2, p.lcls_systm1, '') AS category,
+            (
+                SELECT COUNT(*)
+                FROM visit v
+                WHERE v.place_id = p.place_id
+            ) AS visitCnt, <!-- 방문자수 추가 -->
             p.map_y AS lat,
             p.map_x AS lng,
             p.add1 AS add1,
