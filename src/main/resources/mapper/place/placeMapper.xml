@@ -7,7 +7,7 @@
 
     <resultMap id="placeSearchResultMap" type="com.ucamp.gyeongjuma_be.place.dto.PlaceSearchResponse">
         <id property="placeId" column="place_id"/>
-        <result property="placeName" column="place_name"/>
+        <result property="originalName" column="place_name"/>
         <result property="category" column="category"/>
         <result property="visitCnt" column="visitCnt"/>
         <result property="lat" column="lat"/>
