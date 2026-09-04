@@ -12,5 +12,6 @@ public class AdminPlaceItemDto {
     private String placeName;
     private String category;
     private Boolean isActive;
+    private String language;
     private List<AdminPlaceContentDto> contents;
 }

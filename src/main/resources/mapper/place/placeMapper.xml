@@ -5,6 +5,30 @@
 
 <mapper namespace="com.ucamp.gyeongjuma_be.place.repository.PlaceRepository">
 
+    <resultMap id="placeSearchResultMap" type="com.ucamp.gyeongjuma_be.place.dto.PlaceSearchResponse">
+        <id property="placeId" column="place_id"/>
+        <result property="originalName" column="place_name"/>
+        <result property="category" column="category"/>
+        <result property="visitCnt" column="visitCnt"/>
+        <result property="lat" column="lat"/>
+        <result property="lng" column="lng"/>
+        <result property="add1" column="add1"/>
+        <result property="add2" column="add2"/>
+        <result property="distance" column="distance"/>
+        <result property="congestion" column="congestion"/>
+        <result property="operationHour" column="operationHour"/>
+        <result property="operationStatus" column="operationStatus"/>
+        <result property="parking" column="parking"/>
+        <result property="isVisited" column="isVisited"/>
+        <result property="isFavorite" column="isFavorite"/>
+        <result property="imageUrl" column="imageUrl"/>
+        <association property="description" javaType="com.ucamp.gyeongjuma_be.place.dto.PlaceDescription">
+            <result property="easy" column="easyDescription"/>
+            <result property="normal" column="normalDescription"/>
+            <result property="hard" column="hardDescription"/>
+        </association>
+    </resultMap>
+
     <insert id="saveAll">
         INSERT INTO place (
             place_id,
@@ -110,7 +134,6 @@
             lcls_systm1 AS lclsSystm1,
             lcls_systm2 AS lclsSystm2,
             lcls_systm3 AS lclsSystm3,
-            language,
             radius_meters AS radiusMeters,
             parking,
             usetime,
@@ -131,15 +154,14 @@
           AND is_active = TRUE
     </select>
 
-    <select id="searchPlaces" resultType="com.ucamp.gyeongjuma_be.place.dto.PlaceSearchResponse">
+    <select id="searchPlaces" resultMap="placeSearchResultMap">
         SELECT
             p.place_id AS place_id,
             p.place_name AS place_name,
-            COALESCE(pc.description, '') AS description, <!-- 추후 구현 예정 -->
+            COALESCE(pc.easy_description, '') AS easyDescription,
+            COALESCE(pc.normal_description, '') AS normalDescription,
+            COALESCE(pc.hard_description, '') AS hardDescription,
             COALESCE(p.lcls_systm3, p.lcls_systm2, p.lcls_systm1, '') AS category,
-            0.0 AS rating, <!-- 추후 구현 예정 -->
-            0 AS reviewCount, <!-- 추후 구현 예정 -->
-            0 AS likes, <!-- 추후 구현 예정 -->
             (
                 SELECT COUNT(*)
                 FROM visit v
@@ -232,9 +254,16 @@
             END AS isFavorite,
             NULLIF(p.first_image, '') AS imageUrl
         FROM place p
-        LEFT JOIN place_content pc
+        LEFT JOIN (
+            SELECT
+                place_id,
+                MAX(CASE WHEN difficulty = 'EASY' THEN description END) AS easy_description,
+                MAX(CASE WHEN difficulty = 'NORMAL' THEN description END) AS normal_description,
+                MAX(CASE WHEN difficulty = 'HARD' THEN description END) AS hard_description
+            FROM place_content
+            GROUP BY place_id
+        ) pc
           ON p.place_id = pc.place_id
-         AND pc.difficulty = (select difficulty from member where member_id = #{memberId})
         LEFT JOIN congestion_log cl
           ON cl.place_id = p.place_id
          AND cl.log_date = CURDATE()
