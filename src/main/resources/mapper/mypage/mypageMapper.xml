@@ -6,27 +6,49 @@
 <mapper namespace="com.ucamp.gyeongjuma_be.mypage.repository.MyPageRepository">
 
     <!-- 발자취: 방문한 장소 목록 (최근 방문 순) -->
+    <!--
+      발자취: 방문 인증이 그룹 전체에 행을 남기므로 place_id로 그냥 조인하면
+      같은 장소가 언어 수만큼 중복해서 나온다. 그룹당 한 줄만 남기되
+      회원 언어판을 우선 고르고, 없으면 ko, 그것도 없으면 가장 작은 place_id를 쓴다.
+    -->
     <select id="findVisitHistoryByMemberId" resultType="com.ucamp.gyeongjuma_be.mypage.dto.response.VisitHistoryDto">
-        SELECT
-               v.visit_id                            AS visitId,
-               p.place_id                            AS placeId,
-               p.place_name                          AS placeName,
-               CONCAT_WS(' ', p.add1, NULLIF(p.add2, '')) AS address,
-               NULLIF(p.first_image, '')             AS imageUrl,
-               v.created_at                          AS visitedAt
+        SELECT visitId, placeId, placeName, address, imageUrl, visitedAt
+          FROM (
+                SELECT v.visit_id                                  AS visitId,
+                       p.place_id                                  AS placeId,
+                       p.place_name                                AS placeName,
+                       CONCAT_WS(' ', p.add1, NULLIF(p.add2, ''))  AS address,
+                       NULLIF(p.first_image, '')                   AS imageUrl,
+                       v.created_at                                AS visitedAt,
+                       ROW_NUMBER() OVER (
+                           PARTITION BY p.place_group_id
+                           ORDER BY (p.language = m.locale) DESC,
+                                    (p.language = 'ko') DESC,
+                                    p.place_id
+                       ) AS rn
+                  FROM member m
+                  JOIN visit v
+                    ON v.member_id = m.member_id
+                  JOIN place p
+                    ON p.place_id = v.place_id
+                   AND p.is_active = TRUE
+                 WHERE m.member_id = #{memberId}
+               ) picked
+         WHERE rn = 1
+      ORDER BY visitedAt DESC, visitId DESC
+    </select>
+
+    <!--
+      방문 장소 수: place가 언어별로 분리돼 있고 방문 인증 시 그룹 전체에 행이 들어가므로,
+      place_id로 세면 언어 수만큼 부풀려진다. 같은 장소는 place_group_id로 한 곳으로 센다.
+      (member.visit_place_cnt 컬럼은 갱신 로직이 없어 실시간 집계한다)
+    -->
+    <select id="countVisitedPlacesByMemberId" resultType="long">
+        SELECT COUNT(DISTINCT p.place_group_id)
           FROM visit v
           JOIN place p
             ON p.place_id = v.place_id
-           AND p.is_active = TRUE
          WHERE v.member_id = #{memberId}
-      ORDER BY v.created_at DESC, v.visit_id DESC
-    </select>
-
-    <!-- 방문 장소 수: member.visit_place_cnt 컬럼은 갱신 로직이 없어 visit 테이블에서 실시간 집계 -->
-    <select id="countVisitedPlacesByMemberId" resultType="long">
-        SELECT COUNT(DISTINCT place_id)
-          FROM visit
-         WHERE member_id = #{memberId}
     </select>
 
     <!--

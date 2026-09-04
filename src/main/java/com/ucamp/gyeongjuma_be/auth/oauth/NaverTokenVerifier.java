@@ -9,6 +9,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
 
 import java.util.Map;
 
@@ -40,12 +41,21 @@ public class NaverTokenVerifier implements SocialTokenVerifier {
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
                     .retrieve()
                     .body(new ParameterizedTypeReference<Map<String, Object>>() {});
+        } catch (RestClientResponseException e) {
+            // 어떤 이유로 거절됐는지 알아야 프론트 문제인지 앱 설정 문제인지 가려낼 수 있다
+            log.error("Naver access_token 검증 실패. status={} body={}",
+                    e.getStatusCode(), e.getResponseBodyAsString());
+            throw new CustomException(ErrorCode.SOCIAL_LOGIN_FAILED);
         } catch (RestClientException e) {
-            log.error("Naver access_token 검증 실패: {}", e.getMessage());
+            log.error("Naver 서버 호출 실패(네트워크·타임아웃): {}", e.getMessage());
             throw new CustomException(ErrorCode.SOCIAL_LOGIN_FAILED);
         }
 
         if (body == null || !"00".equals(body.get("resultcode"))) {
+            // 네이버는 200으로 응답하면서 resultcode로 실패를 알리는 경우가 있다
+            log.error("Naver 응답이 정상이 아님. resultcode={} message={}",
+                    body == null ? null : body.get("resultcode"),
+                    body == null ? null : body.get("message"));
             throw new CustomException(ErrorCode.SOCIAL_LOGIN_FAILED);
         }
 
@@ -57,6 +67,9 @@ public class NaverTokenVerifier implements SocialTokenVerifier {
         Map<String, Object> response = (Map<String, Object>) responseObj;
         String providerId = (String) response.get("id");
         if (providerId == null) {
+            // 네이버 앱에 "회원 식별자" 제공 항목이 설정되지 않으면 id가 비어서 온다
+            log.error("Naver 응답에 id가 없음. 네이버 개발자센터의 제공 항목 설정 확인 필요. keys={}",
+                    response.keySet());
             throw new CustomException(ErrorCode.SOCIAL_LOGIN_FAILED);
         }
 

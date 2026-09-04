@@ -5,11 +5,19 @@
 
 <mapper namespace="com.ucamp.gyeongjuma_be.admin.repository.AdminPlaceRepository">
 
+    <!--
+      관광지는 같은 장소가 언어별로 별도 행(place_group_id로 묶임)이라
+      목록은 그룹 대표 행(place_id = place_group_id)만 보여준다.
+      검색은 그룹 안의 어느 언어판 이름·주소에 걸려도 찾히게 한다.
+    -->
     <sql id="placeSearchWhere">
         <where>
+            AND p.place_id = p.place_group_id
             <if test="keyword != null and keyword != ''">
-                AND (p.place_name LIKE CONCAT('%', #{keyword}, '%')
-                     OR p.add1 LIKE CONCAT('%', #{keyword}, '%'))
+                AND EXISTS (SELECT 1 FROM place s
+                             WHERE s.place_group_id = p.place_group_id
+                               AND (s.place_name LIKE CONCAT('%', #{keyword}, '%')
+                                    OR s.add1 LIKE CONCAT('%', #{keyword}, '%')))
             </if>
             <if test="isActive != null">
                 AND p.is_active = #{isActive}
@@ -31,9 +39,12 @@
         p.is_active       AS isActive,
         p.created_at      AS createdAt,
         p.deleted_at      AS deletedAt,
-        (SELECT COUNT(*) FROM visit v WHERE v.place_id = p.place_id)                                  AS visitCnt,
+        (SELECT COUNT(DISTINCT v.member_id)
+           FROM visit v JOIN place vp ON vp.place_id = v.place_id
+          WHERE vp.place_group_id = p.place_group_id)                                                 AS visitCnt,
         (SELECT COUNT(*) FROM place_quiz_info pqi
-          WHERE pqi.place_id = p.place_id AND pqi.is_active = TRUE)                                   AS quizSetCnt
+           JOIN place qp ON qp.place_id = pqi.place_id
+          WHERE qp.place_group_id = p.place_group_id AND pqi.is_active = TRUE)                        AS quizSetCnt
     </sql>
 
     <select id="findPlaces" resultType="com.ucamp.gyeongjuma_be.admin.dto.response.AdminPlaceDto">
@@ -86,28 +97,38 @@
          LIMIT #{size} OFFSET #{offset}
     </select>
 
+    <!-- 어느 언어판 ID로 열어도 그룹 대표 행을 돌려준다 -->
     <select id="findPlaceItemById" resultType="com.ucamp.gyeongjuma_be.admin.dto.response.AdminPlaceItemDto">
-        SELECT p.place_id   AS placeId,
-               p.place_name AS placeName,
-               NULL         AS category,
-               p.is_active  AS isActive
+        SELECT rep.place_id   AS placeId,
+               rep.place_name AS placeName,
+               NULL           AS category,
+               rep.is_active  AS isActive
           FROM place p
+          JOIN place rep
+            ON rep.place_id = p.place_group_id
          WHERE p.place_id = #{placeId}
     </select>
 
+    <!--
+      해설은 각 언어판 place 행에 나뉘어 붙어 있다 (영어 해설은 영어 place 행에).
+      관리 화면은 관광지 하나에 언어별 해설이 모여 보여야 하므로 그룹 전체를 긁어온다.
+      placeId는 화면에서 묶는 키라 그룹 대표 ID로 돌려준다.
+    -->
     <select id="findContentsByPlaceIds"
             resultType="com.ucamp.gyeongjuma_be.admin.dto.response.AdminPlaceContentDto">
         SELECT pc.place_content_id   AS placeContentId,
                pc.difficulty         AS difficulty,
                pc.language           AS language,
                pc.description        AS description,
-               pc.place_id           AS placeId
+               sp.place_group_id     AS placeId
           FROM place_content pc
-         WHERE pc.place_id IN
+          JOIN place sp
+            ON sp.place_id = pc.place_id
+         WHERE sp.place_group_id IN
         <foreach collection="placeIds" item="id" open="(" separator="," close=")">
             #{id}
         </foreach>
-      ORDER BY pc.place_id, pc.difficulty, pc.language, pc.place_content_id
+      ORDER BY sp.place_group_id, pc.difficulty, pc.language, pc.place_content_id
     </select>
 
     <select id="findContentById"
@@ -116,8 +137,9 @@
                pc.difficulty         AS difficulty,
                pc.language           AS language,
                pc.description        AS description,
-               pc.place_id           AS placeId
+               sp.place_group_id     AS placeId
           FROM place_content pc
+          JOIN place sp ON sp.place_id = pc.place_id
          WHERE pc.place_content_id = #{placeContentId}
     </select>
 
@@ -126,17 +148,33 @@
       place_content에 유니크 제약이 없어 INSERT ... ON DUPLICATE KEY를 쓸 수 없으므로
       UPDATE를 먼저 시도하고, 바뀐 행이 없을 때만 INSERT 하도록 서비스에서 순서를 잡는다.
     -->
+    <!--
+      해설은 그룹 안의 "그 언어판 place 행"에 붙인다 (기존 데이터 방식).
+      그 언어판이 없는 장소면(한국어만 있는 관광지 등) 그룹 대표 행에 붙인다 —
+      조회는 그룹 전체를 긁어오므로 어느 쪽에 있든 화면에는 똑같이 나온다.
+    -->
+    <sql id="targetPlaceForContent">
+        COALESCE(
+            (SELECT s.place_id FROM place s
+              WHERE s.place_group_id = (SELECT place_group_id FROM place WHERE place_id = #{placeId})
+                AND s.language = #{language}
+              LIMIT 1),
+            (SELECT place_group_id FROM place WHERE place_id = #{placeId})
+        )
+    </sql>
+
     <update id="upsertPlaceContent">
-        UPDATE place_content
-           SET description = #{description}
-         WHERE place_id    = #{placeId}
-           AND language    = #{language}
-           AND difficulty  = #{difficulty}
+        UPDATE place_content pc
+          JOIN place sp ON sp.place_id = pc.place_id
+           SET pc.description = #{description}
+         WHERE sp.place_group_id = (SELECT place_group_id FROM (SELECT place_group_id FROM place WHERE place_id = #{placeId}) t)
+           AND pc.language      = #{language}
+           AND pc.difficulty    = #{difficulty}
     </update>
 
     <insert id="insertPlaceContent">
         INSERT INTO place_content (description, language, difficulty, place_id)
-        VALUES (#{description}, #{language}, #{difficulty}, #{placeId})
+        SELECT #{description}, #{language}, #{difficulty}, <include refid="targetPlaceForContent"/>
     </insert>
 
     <delete id="deletePlaceContent">
@@ -145,12 +183,13 @@
     </delete>
 
     <!-- 물리 삭제는 FK(visit·place_content·place_image·place_quiz_info) 때문에 불가하므로 소프트 삭제 -->
+    <!-- 언어판이 따로 살아있으면 목록·검색이 어긋나므로 그룹 전체를 함께 처리한다 -->
     <update id="softDeletePlace">
         UPDATE place
            SET is_active  = FALSE,
                deleted_at = #{deletedAt},
                updated_at = #{deletedAt}
-         WHERE place_id   = #{placeId}
+         WHERE place_group_id = (SELECT place_group_id FROM (SELECT place_group_id FROM place WHERE place_id = #{placeId}) t)
            AND is_active  = TRUE
     </update>
 
@@ -159,7 +198,7 @@
            SET is_active  = TRUE,
                deleted_at = NULL,
                updated_at = #{updatedAt}
-         WHERE place_id   = #{placeId}
+         WHERE place_group_id = (SELECT place_group_id FROM (SELECT place_group_id FROM place WHERE place_id = #{placeId}) t)
            AND is_active  = FALSE
     </update>
 

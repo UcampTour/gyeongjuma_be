@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>경주ON 로그인</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<style>
+  :root{
+    --bg:#f4f6f5; --card:#fff; --ink:#17211d; --muted:#6b7b74; --rule:#e2e8e5;
+    --accent:#2f6f62; --err:#b4462f; --ok:#2f6f62;
+    --kakao:#FEE500; --kakao-ink:#191600; --naver:#03C75A; --google-rule:#dadce0;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;min-height:100vh;background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans KR",system-ui,-apple-system,sans-serif;
+    display:flex;align-items:center;justify-content:center;padding:24px;
+  }
+  .shell{width:100%;max-width:400px;display:flex;flex-direction:column;gap:14px}
+
+  .card{background:var(--card);border:1px solid var(--rule);border-radius:14px;padding:32px 28px}
+
+  .brand{text-align:center;margin-bottom:26px}
+  .brand .mark{
+    width:56px;height:56px;margin:0 auto 14px;border-radius:16px;background:var(--accent);
+    display:flex;align-items:center;justify-content:center;color:#fff;font-size:26px;
+  }
+  .brand h1{font-size:21px;margin:0 0 6px;font-weight:700;letter-spacing:-.02em}
+  .brand p{font-size:13px;color:var(--muted);margin:0}
+
+  /* ── 소셜 버튼 ── */
+  .social{display:flex;flex-direction:column;gap:10px}
+  .btn{
+    display:flex;align-items:center;justify-content:center;gap:9px;width:100%;
+    height:50px;border-radius:10px;border:1px solid transparent;cursor:pointer;
+    font-family:inherit;font-size:15px;font-weight:500;transition:filter .12s,box-shadow .12s;
+  }
+  .btn:hover{filter:brightness(.96)}
+  .btn:active{filter:brightness(.92)}
+  .btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .btn:disabled{opacity:.5;cursor:not-allowed;filter:none}
+  .btn svg{width:19px;height:19px;flex:none}
+  .btn-kakao{background:var(--kakao);color:var(--kakao-ink)}
+  .btn-naver{background:var(--naver);color:#fff}
+  .btn-google{background:#fff;color:#3c4043;border-color:var(--google-rule)}
+
+  .divider{display:flex;align-items:center;gap:10px;margin:20px 0 0;color:var(--muted);font-size:12px}
+  .divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--rule)}
+
+  /* ── 로그인 후 ── */
+  .profile{display:none;text-align:center}
+  .profile.on{display:block}
+  .profile img,.profile .ph{
+    width:64px;height:64px;border-radius:50%;object-fit:cover;margin:0 auto 12px;display:block;
+    background:var(--bg);border:1px solid var(--rule);
+  }
+  .profile .ph{display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--muted)}
+  .profile .name{font-size:17px;font-weight:700;margin-bottom:2px}
+  .profile .sub{font-size:12.5px;color:var(--muted);margin-bottom:4px}
+  .badge{
+    display:inline-block;font-size:11px;padding:2px 9px;border-radius:99px;
+    background:#e4f0ec;color:var(--accent);font-weight:500;margin-bottom:16px;
+  }
+  .actions{display:flex;gap:8px;margin-top:6px}
+  .actions button{
+    flex:1;height:40px;border-radius:8px;border:1px solid var(--rule);background:#fff;
+    color:var(--ink);font-family:inherit;font-size:13px;cursor:pointer;
+  }
+  .actions button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+  /* ── 상태 / 콘솔 ── */
+  .msg{font-size:13px;text-align:center;min-height:19px;margin-top:14px;color:var(--muted)}
+  .msg.err{color:var(--err)}
+  .msg.ok{color:var(--ok)}
+
+  details{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:0 18px}
+  details[open]{padding-bottom:18px}
+  summary{cursor:pointer;padding:14px 0;font-size:13px;font-weight:500;color:var(--muted);list-style:none}
+  summary::-webkit-details-marker{display:none}
+  summary::before{content:"⚙  "}
+  label{display:block;font-size:11.5px;color:var(--muted);margin:10px 0 4px}
+  input,textarea,select{
+    width:100%;padding:9px 11px;border:1px solid var(--rule);border-radius:7px;
+    font:inherit;font-size:13px;background:#fff;color:var(--ink)
+  }
+  textarea{min-height:70px;resize:vertical;font-family:ui-monospace,monospace;font-size:11.5px}
+  .row{display:flex;gap:8px;margin-top:12px}
+  .row button{
+    flex:1;height:38px;border-radius:7px;border:1px solid var(--accent);
+    background:var(--accent);color:#fff;font-family:inherit;font-size:13px;cursor:pointer
+  }
+  .row button.ghost{background:#fff;color:var(--accent)}
+  .reg{width:100%;border-collapse:collapse;font-size:12px;margin-top:10px}
+  .reg th{text-align:left;width:88px;padding:5px 8px 5px 0;color:var(--muted);font-weight:500;vertical-align:top}
+  .reg code{background:var(--bg);padding:2px 6px;border-radius:4px;font-size:11px}
+  .reg button{padding:1px 7px;font-size:10.5px;margin-left:5px;border:1px solid var(--rule);
+    background:#fff;border-radius:4px;cursor:pointer;color:var(--muted)}
+  pre{
+    margin:12px 0 0;padding:11px;background:#eef2f0;border:1px solid var(--rule);border-radius:7px;
+    overflow-x:auto;font-size:11.5px;line-height:1.5;white-space:pre-wrap;word-break:break-all;max-height:260px
+  }
+  .hint{font-size:11.5px;color:var(--muted);margin:8px 0 0;line-height:1.5}
+  #naverIdLogin{display:none}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <div class="card">
+    <!-- 로그인 화면 -->
+    <div id="loginView">
+      <div class="brand">
+        <div class="mark">경</div>
+        <h1>경주ON</h1>
+        <p>간편하게 로그인하고 경주를 여행해 보세요</p>
+      </div>
+
+      <div class="social">
+        <button class="btn btn-kakao" onclick="kakaoLogin()">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="currentColor" d="M12 3C6.99 3 3 6.2 3 10.14c0 2.52 1.68 4.73 4.2 5.99-.14.5-.9 3.1-.93 3.31 0 0-.02.16.08.22.1.06.23.01.23.01.3-.04 3.44-2.25 3.98-2.63.47.07.95.1 1.44.1 5.01 0 9-3.2 9-7.14S17.01 3 12 3z"/>
+          </svg>
+          카카오로 시작하기
+        </button>
+
+        <button class="btn btn-naver" onclick="naverLogin()">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="currentColor" d="M15.2 12.4 8.6 3H3.5v18h5.3v-9.4L15.4 21h5.1V3h-5.3z"/>
+          </svg>
+          네이버로 시작하기
+        </button>
+
+        <button class="btn btn-google" onclick="googleLogin()">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="#4285F4" d="M21.6 12.23c0-.7-.06-1.38-.18-2.02H12v3.82h5.38a4.6 4.6 0 0 1-2 3.02v2.5h3.24c1.89-1.74 2.98-4.3 2.98-7.32z"/>
+            <path fill="#34A853" d="M12 22c2.7 0 4.96-.9 6.62-2.43l-3.24-2.51c-.9.6-2.05.96-3.38.96-2.6 0-4.8-1.76-5.59-4.12H3.06v2.6A10 10 0 0 0 12 22z"/>
+            <path fill="#FBBC05" d="M6.41 13.9a6 6 0 0 1 0-3.82v-2.6H3.06a10 10 0 0 0 0 9.02l3.35-2.6z"/>
+            <path fill="#EA4335" d="M12 5.96c1.47 0 2.79.51 3.83 1.5l2.87-2.87C16.95 2.99 14.7 2 12 2A10 10 0 0 0 3.06 7.48l3.35 2.6C7.2 7.72 9.4 5.96 12 5.96z"/>
+          </svg>
+          Google로 시작하기
+        </button>
+      </div>
+
+      <div class="divider">테스트용 화면</div>
+      <div id="msg" class="msg">로그인할 서비스를 선택하세요</div>
+    </div>
+
+    <!-- 로그인 성공 화면 -->
+    <div id="profileView" class="profile">
+      <div id="avatar" class="ph">👤</div>
+      <div class="name" id="pName">—</div>
+      <div class="sub" id="pEmail">—</div>
+      <span class="badge" id="pBadge">로그인됨</span>
+      <div class="actions">
+        <button class="primary" onclick="callMe()">내 정보 조회</button>
+        <button onclick="doLogout()">로그아웃</button>
+      </div>
+      <div id="msg2" class="msg"></div>
+    </div>
+  </div>
+
+  <!-- 설정 (평소엔 접혀 있음) -->
+  <details>
+    <summary>개발자 설정 · 응답 보기</summary>
+
+    <label>Kakao JavaScript 키</label>
+    <input id="kakaoKey" placeholder="카카오 개발자 콘솔 > 앱 키">
+    <label>Naver Client ID</label>
+    <input id="naverKey" placeholder="네이버 개발자센터 > Client ID">
+    <label>Google Client ID</label>
+    <input id="googleKey" placeholder="...apps.googleusercontent.com">
+    <div class="row"><button class="ghost" onclick="saveKeys()">키 저장</button></div>
+
+    <table class="reg">
+      <tr><th>서비스 URL</th><td><code id="regOrigin"></code>
+          <button onclick="copyText('regOrigin')">복사</button></td></tr>
+      <tr><th>Callback</th><td><code id="regCallback"></code>
+          <button onclick="copyText('regCallback')">복사</button></td></tr>
+    </table>
+    <p class="hint">
+      네이버가 "서비스 설정에 오류" 라고 하면 위 두 값이 콘솔에 글자 그대로 등록됐는지,
+      PC웹 환경과 회원 식별자 제공 항목이 켜져 있는지 확인하세요.
+    </p>
+
+    <label>토큰 직접 넣어 백엔드만 테스트</label>
+    <select id="manualProvider">
+      <option value="NAVER">NAVER</option><option value="KAKAO">KAKAO</option><option value="GOOGLE">GOOGLE</option>
+    </select>
+    <textarea id="manualToken" placeholder="access_token (구글은 id_token) 붙여넣기"></textarea>
+    <div class="row">
+      <button onclick="loginWithToken(manualProvider.value, manualToken.value.trim())">이 토큰으로 로그인</button>
+    </div>
+
+    <pre id="result">아직 요청하지 않았습니다.</pre>
+    <div id="naverIdLogin"></div>
+  </details>
+
+</div>
+
+<script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js"></script>
+<script src="https://static.nid.naver.com/js/naveridlogin_js_sdk_2.0.2.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+  const CALLBACK_URL = location.origin + location.pathname;
+  regOrigin.textContent = location.origin;
+  regCallback.textContent = CALLBACK_URL;
+
+  let accessToken = null;
+
+  /* 키는 브라우저에만 보관한다 — 파일에 박으면 커밋에 섞인다 */
+  const KEYS = ['kakaoKey','naverKey','googleKey'];
+  KEYS.forEach(id => { const v = localStorage.getItem('logintest.'+id); if (v) document.getElementById(id).value = v; });
+  function saveKeys(){ KEYS.forEach(id => localStorage.setItem('logintest.'+id, document.getElementById(id).value.trim())); say('ok','키를 저장했습니다.'); }
+  const keyOf = id => document.getElementById(id).value.trim();
+
+  function say(kind, text){
+    const el = document.getElementById(profileView.classList.contains('on') ? 'msg2' : 'msg');
+    el.className = 'msg' + (kind ? ' '+kind : '');
+    el.textContent = text;
+  }
+  function dump(v){ result.textContent = typeof v === 'string' ? v : JSON.stringify(v, null, 2); }
+
+  function copyText(id){
+    navigator.clipboard.writeText(document.getElementById(id).textContent)
+      .then(()=>say('ok','복사했습니다.')).catch(()=>say('err','복사 실패 — 직접 선택하세요.'));
+  }
+
+  /* ── 백엔드 로그인 ── */
+  async function loginWithToken(provider, token){
+    if (!token){ say('err','토큰이 비어 있습니다.'); return; }
+    const body = provider === 'GOOGLE' ? { provider, idToken: token } : { provider, accessToken: token };
+    say('', provider + ' 로 로그인 중…');
+
+    try{
+      const res = await fetch('/api/members/login', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        credentials:'include',                     // 리프레시 토큰 쿠키 수신
+        body: JSON.stringify(body)
+      });
+      const text = await res.text();
+      let data; try { data = JSON.parse(text); } catch { data = text; }
+      dump(data);
+
+      if (res.ok && data.data){
+        accessToken = data.data.accessToken;
+        showProfile(data.data, provider);
+      } else {
+        say('err', '로그인 실패 (HTTP ' + res.status + ') — 설정 패널의 응답을 확인하세요.');
+      }
+    } catch(e){ say('err','요청 실패: ' + e.message); }
+  }
+
+  function showProfile(d, provider){
+    loginView.style.display = 'none';
+    profileView.classList.add('on');
+    pName.textContent = d.nickname || '(닉네임 미설정)';
+    pEmail.textContent = d.email || provider + ' 계정';
+    pBadge.textContent = d.isNewMember ? '신규 가입 · ' + provider : '로그인됨 · ' + provider;
+    say('ok','환영합니다.');
+  }
+
+  /* ── 로그인 후 동작 ── */
+  async function callMe(){
+    if (!accessToken){ say('err','액세스 토큰이 없습니다.'); return; }
+    const res = await fetch('/api/members/me', { headers:{ Authorization:'Bearer ' + accessToken } });
+    const data = await res.json();
+    dump(data);
+    if (res.ok && data.data){
+      if (data.data.profileImage){
+        avatar.outerHTML = '<img id="avatar" src="' + data.data.profileImage + '" alt="">';
+      }
+      say('ok','내 정보를 불러왔습니다.');
+    } else { say('err','조회 실패 (HTTP ' + res.status + ')'); }
+  }
+
+  async function doLogout(){
+    if (accessToken){
+      const res = await fetch('/api/members/logout', {
+        method:'POST', credentials:'include', headers:{ Authorization:'Bearer ' + accessToken }
+      });
+      dump(await res.json().catch(()=>'(본문 없음)'));
+    }
+    accessToken = null;
+    profileView.classList.remove('on');
+    loginView.style.display = '';
+    say('','로그아웃했습니다.');
+  }
+
+  /* ── 카카오 ── */
+  function kakaoLogin(){
+    const key = keyOf('kakaoKey');
+    if (!key){ say('err','설정에서 Kakao JavaScript 키를 먼저 넣어주세요.'); return; }
+    if (!window.Kakao){ say('err','카카오 SDK 를 불러오지 못했습니다.'); return; }
+    if (!Kakao.isInitialized()) Kakao.init(key);
+    Kakao.Auth.login({
+      scope:'profile_nickname, profile_image',
+      success: r => loginWithToken('KAKAO', r.access_token),
+      fail: err => { dump(err); say('err','카카오 로그인 실패'); }
+    });
+  }
+
+  /* ── 네이버 (리다이렉트 후 해시로 토큰이 돌아온다) ── */
+  let naverInstance = null;
+  function naverLogin(){
+    const key = keyOf('naverKey');
+    if (!key){ say('err','설정에서 Naver Client ID 를 먼저 넣어주세요.'); return; }
+    if (!window.naver){ say('err','네이버 SDK 를 불러오지 못했습니다.'); return; }
+    saveKeys();
+    if (!naverInstance){
+      naverInstance = new naver.LoginWithNaverId({
+        clientId: key, callbackUrl: CALLBACK_URL,
+        isPopup:false, callbackHandle:true,
+        loginButton:{ color:'green', type:3, height:40 }
+      });
+      naverInstance.init();
+    }
+    const a = document.querySelector('#naverIdLogin a');
+    if (a) a.click();
+    else say('err','네이버 로그인 링크 생성 실패 — Client ID 와 Callback URL 을 확인하세요.');
+  }
+
+  (function handleNaverRedirect(){
+    if (!location.hash.includes('access_token')) return;
+    const t = new URLSearchParams(location.hash.substring(1)).get('access_token');
+    if (!t) return;
+    history.replaceState(null,'',location.pathname);   // 주소창에서 토큰 제거
+    loginWithToken('NAVER', t);
+  })();
+
+  /* ── 구글 ── */
+  function googleLogin(){
+    const key = keyOf('googleKey');
+    if (!key){ say('err','설정에서 Google Client ID 를 먼저 넣어주세요.'); return; }
+    if (!window.google){ say('err','구글 SDK 를 불러오지 못했습니다.'); return; }
+    google.accounts.id.initialize({
+      client_id: key,
+      callback: r => loginWithToken('GOOGLE', r.credential)   // credential 이 id_token
+    });
+    google.accounts.id.prompt(n => {
+      if (n.isNotDisplayed() || n.isSkippedMoment())
+        say('err','구글 로그인 창이 뜨지 않았습니다 — 승인된 자바스크립트 원본을 확인하세요.');
+    });
+  }
+</script>
+</body>
+</html>

@@ -22,7 +22,6 @@ public class VisitServiceImpl implements VisitService {
     private static final double EARTH_RADIUS_METERS = 6_371_000;
     private final MemberRepository memberRepository;
     private final PlaceRepository placeRepository;
-    private final MemberRepository memberRepository;
     private final VisitRepository visitRepository;
 
     @Override
@@ -55,6 +54,8 @@ public class VisitServiceImpl implements VisitService {
 
         Visit visit = new Visit(memberId, placeId);
         visitRepository.save(visit);
+        // 같은 관광지의 다른 언어판에도 방문 기록을 남긴다 (회원이 언어를 바꿔도 유지되도록)
+        visitRepository.saveGroupSiblings(visit.getVisitId());
         if (memberRepository.incrementVisitPlaceCnt(memberId) != 1) {
             throw new CustomException(ErrorCode.MEMBER_NOT_FOUND);
         }
