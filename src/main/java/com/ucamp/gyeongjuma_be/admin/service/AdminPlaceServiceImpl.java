@@ -127,8 +127,10 @@ public class AdminPlaceServiceImpl implements AdminPlaceService {
         getExistingPlace(placeId);
 
         AdminPlaceContentDto content = adminPlaceRepository.findContentById(placeContentId);
-        // 다른 관광지의 해설을 지우지 못하게 소속을 확인한다
-        if (content == null || !placeId.equals(content.getPlaceId())) {
+        // 다른 관광지의 해설을 지우지 못하게 소속을 확인한다.
+        // 조회가 그룹 대표 ID를 돌려주므로, 어느 언어판 ID로 요청했든 같은 그룹인지로 본다.
+        AdminPlaceItemDto place = adminPlaceRepository.findPlaceItemById(placeId);
+        if (content == null || place == null || !place.getPlaceId().equals(content.getPlaceId())) {
             throw new CustomException(ErrorCode.PLACE_NOT_FOUND);
         }
         adminPlaceRepository.deletePlaceContent(placeContentId);
