@@ -79,7 +79,8 @@
         SELECT p.place_id   AS placeId,
                p.place_name AS placeName,
                NULL         AS category,
-               p.is_active  AS isActive
+               p.is_active  AS isActive,
+               p.language   AS language
           FROM place p
         <include refid="placeSearchWhere"/>
       ORDER BY p.place_id ASC
@@ -90,7 +91,8 @@
         SELECT p.place_id   AS placeId,
                p.place_name AS placeName,
                NULL         AS category,
-               p.is_active  AS isActive
+               p.is_active  AS isActive,
+               p.language   AS language
           FROM place p
          WHERE p.place_id = #{placeId}
     </select>
