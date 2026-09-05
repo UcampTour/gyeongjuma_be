@@ -112,7 +112,10 @@
     <select id="findCourseItems" resultType="com.ucamp.gyeongjuma_be.admin.dto.response.AdminCourseItemDto">
         SELECT c.course_id AS id,
                c.type      AS type,
-               c.is_active AS isUse
+               c.is_active AS isUse,
+               c.name AS name,
+               c.description AS description,
+               c.place_cnt AS placeCnt
           FROM course c
         <include refid="courseItemWhere"/>
       ORDER BY c.created_at DESC, c.course_id DESC
@@ -128,7 +131,10 @@
     <select id="findCourseItemById" resultType="com.ucamp.gyeongjuma_be.admin.dto.response.AdminCourseItemDto">
         SELECT c.course_id AS id,
                c.type      AS type,
-               c.is_active AS isUse
+               c.is_active AS isUse,
+               c.name AS name,
+               c.description AS description,
+               c.place_cnt AS placeCnt
           FROM course c
          WHERE c.course_id = #{courseId}
     </select>

@@ -13,6 +13,9 @@ public class AdminCourseItemDto {
     private String type;
     /** 사용 여부 (course.is_active) */
     private Boolean isUse;
+    private String name;
+    private String description;
+    private Long placeCnt;
     private List<AdminCourseSimplePlaceDto> places;
     private List<AdminCourseContentDto> contents;
 }

@@ -7,6 +7,7 @@
 
     <sql id="quizSetWhere">
         <where>
+            AND pqi.origin_info_id IS NULL
             <if test="keyword != null and keyword != ''">
                 AND (pqi.title LIKE CONCAT('%', #{keyword}, '%')
                      OR p.place_name LIKE CONCAT('%', #{keyword}, '%'))
