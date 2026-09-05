@@ -13,4 +13,7 @@ public interface VisitRepository {
     boolean existsByMemberIdAndPlaceId(@Param("memberId") Long memberId, @Param("placeId") Long placeId);
 
     int save(Visit visit);
+
+    /** 방금 저장한 방문을 같은 관광지의 다른 언어판에도 남긴다 */
+    int saveGroupSiblings(@Param("visitId") Long visitId);
 }

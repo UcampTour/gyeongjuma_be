@@ -35,6 +35,13 @@ public interface AdminMemberRepository {
     int softDeleteMember(@Param("memberId") Long memberId,
                          @Param("deletedAt") LocalDateTime deletedAt);
 
+    int updateNickname(@Param("memberId") Long memberId,
+                       @Param("nickname") String nickname,
+                       @Param("updatedAt") LocalDateTime updatedAt);
+
+    boolean existsByNicknameExcludingMember(@Param("memberId") Long memberId,
+                                            @Param("nickname") String nickname);
+
     int addPoint(@Param("memberId") Long memberId, @Param("amount") Long amount);
 
     int insertPointHistory(@Param("memberId") Long memberId,

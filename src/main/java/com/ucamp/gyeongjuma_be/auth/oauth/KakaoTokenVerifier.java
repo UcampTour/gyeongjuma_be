@@ -9,6 +9,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
 
 import java.util.Map;
 
@@ -40,8 +41,13 @@ public class KakaoTokenVerifier implements SocialTokenVerifier {
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
                     .retrieve()
                     .body(new ParameterizedTypeReference<Map<String, Object>>() {});
+        } catch (RestClientResponseException e) {
+            // 어떤 이유로 거절됐는지 알아야 프론트 문제인지 앱 설정 문제인지 가려낼 수 있다
+            log.error("Kakao access_token 검증 실패. status={} body={}",
+                    e.getStatusCode(), e.getResponseBodyAsString());
+            throw new CustomException(ErrorCode.SOCIAL_LOGIN_FAILED);
         } catch (RestClientException e) {
-            log.error("Kakao access_token 검증 실패: {}", e.getMessage());
+            log.error("Kakao 서버 호출 실패(네트워크·타임아웃): {}", e.getMessage());
             throw new CustomException(ErrorCode.SOCIAL_LOGIN_FAILED);
         }
 

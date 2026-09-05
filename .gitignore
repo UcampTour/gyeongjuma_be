@@ -46,3 +46,6 @@ src/test/java/com/ucamp/gyeongjuma_be/AdminPasswordHashTool.java
 
 ### 로컬 작성 문서 (공유하지 않음) ###
 docs/
+
+### 테스트 코드 (공유하지 않음) ###
+src/test/

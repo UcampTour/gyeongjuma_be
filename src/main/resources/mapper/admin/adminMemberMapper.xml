@@ -66,7 +66,9 @@
                m.created_at      AS createdAt,
                m.updated_at      AS updatedAt,
                m.deleted_at      AS deletedAt,
-               (SELECT COUNT(*) FROM visit v WHERE v.member_id = m.member_id)                        AS visitCnt,
+               (SELECT COUNT(DISTINCT p.place_group_id)
+                  FROM visit v JOIN place p ON p.place_id = v.place_id
+                 WHERE v.member_id = m.member_id)                                                     AS visitCnt,
                (SELECT COUNT(*) FROM member_stamp ms WHERE ms.member_id = m.member_id)               AS stampCnt,
                (SELECT COUNT(*) FROM member_quiz_response r WHERE r.member_id = m.member_id)         AS quizAnswerCnt,
                (SELECT COUNT(*) FROM member_quiz_response r
@@ -112,6 +114,24 @@
          WHERE member_id                = #{memberId}
            AND is_active                = TRUE
     </update>
+
+    <update id="updateNickname">
+        UPDATE member
+           SET nickname   = #{nickname},
+               updated_at = #{updatedAt}
+         WHERE member_id  = #{memberId}
+           AND is_active  = TRUE
+    </update>
+
+    <select id="existsByNicknameExcludingMember" resultType="boolean">
+        SELECT EXISTS (
+            SELECT 1
+              FROM member
+             WHERE nickname   = #{nickname}
+               AND is_active  = TRUE
+               AND member_id &lt;&gt; #{memberId}
+        )
+    </select>
 
     <update id="addPoint">
         UPDATE member

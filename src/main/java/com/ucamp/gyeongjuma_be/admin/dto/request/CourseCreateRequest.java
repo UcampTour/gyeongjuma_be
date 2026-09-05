@@ -3,6 +3,7 @@ package com.ucamp.gyeongjuma_be.admin.dto.request;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 import java.util.List;
@@ -21,7 +22,15 @@ public record CourseCreateRequest(
         @Size(max = 512, message = "썸네일 URL은 512자 이하여야 합니다.")
         String thumbnailUrl,
 
+        // WALK(기본), DRIVE, BIKE, TRANSIT
+        @Pattern(regexp = "^$|^(?i)(WALK|DRIVE|BIKE|TRANSIT)$",
+                message = "코스 유형은 WALK, DRIVE, BIKE, TRANSIT 중 하나여야 합니다.")
+        String type,
+
         @NotEmpty(message = "코스에 담을 장소를 1개 이상 선택해야 합니다.")
         List<@NotNull(message = "장소 ID는 비어 있을 수 없습니다.") Long> placeIds
 ) {
+    public String typeOrDefault() {
+        return (type == null || type.isBlank()) ? "WALK" : type.toUpperCase();
+    }
 }

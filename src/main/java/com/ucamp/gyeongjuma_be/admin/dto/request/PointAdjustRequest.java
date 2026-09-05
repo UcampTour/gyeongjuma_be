@@ -13,6 +13,10 @@ public record PointAdjustRequest(
         @Size(max = 100, message = "사유는 100자 이내여야 합니다.")
         String reason
 ) {
+    /**
+     * 사유 기본값. 실제 이력에는 서비스가 여기에 조정 시각을 덧붙여 저장한다
+     * (point_history의 (member_id, description) 유니크 제약 때문에 같은 문구를 반복 저장할 수 없다).
+     */
     public String reasonOrDefault() {
         return (reason == null || reason.isBlank()) ? "관리자 조정" : reason;
     }

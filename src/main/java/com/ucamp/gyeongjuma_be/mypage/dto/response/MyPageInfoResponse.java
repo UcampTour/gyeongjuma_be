@@ -9,7 +9,13 @@ public record MyPageInfoResponse(
         String profileImage,
         String difficulty,
         Long point,
+        /** 누적 포인트 — member.point와 같은 값 (프론트 요청 필드명) */
+        Long totalPoint,
         Long distance,
-        Long visitPlaceCnt
+        Long visitPlaceCnt,
+        /** 모든 문항을 푼 퀴즈 세트 수 */
+        Long quizCount,
+        /** 담긴 장소를 모두 방문한 코스 수 */
+        Long courseCount
 ) {
 }

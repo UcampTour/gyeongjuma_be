@@ -13,6 +13,7 @@ public class AdminCourseDto {
     private String name;
     private String description;
     private String thumbnailUrl;
+    private String type;
     private Long placeCnt;
     private Boolean isActive;
 
