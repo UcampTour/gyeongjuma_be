@@ -22,6 +22,7 @@ public class VisitServiceImpl implements VisitService {
     private static final double EARTH_RADIUS_METERS = 6_371_000;
     private final PlaceRepository placeRepository;
     private final VisitRepository visitRepository;
+    private final MemberRepository memberRepository;
 
     @Override
     @Transactional(readOnly = true)

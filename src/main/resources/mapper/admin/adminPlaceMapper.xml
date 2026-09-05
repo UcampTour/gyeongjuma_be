@@ -12,12 +12,9 @@
     -->
     <sql id="placeSearchWhere">
         <where>
-            AND p.place_id = p.place_group_id
             <if test="keyword != null and keyword != ''">
-                AND EXISTS (SELECT 1 FROM place s
-                             WHERE s.place_group_id = p.place_group_id
-                               AND (s.place_name LIKE CONCAT('%', #{keyword}, '%')
-                                    OR s.add1 LIKE CONCAT('%', #{keyword}, '%')))
+                AND (p.place_name LIKE CONCAT('%', #{keyword}, '%')
+                OR p.add1 LIKE CONCAT('%', #{keyword}, '%'))
             </if>
             <if test="isActive != null">
                 AND p.is_active = #{isActive}
@@ -119,18 +116,16 @@
     <select id="findContentsByPlaceIds"
             resultType="com.ucamp.gyeongjuma_be.admin.dto.response.AdminPlaceContentDto">
         SELECT pc.place_content_id   AS placeContentId,
-               pc.difficulty         AS difficulty,
-               pc.language           AS language,
-               pc.description        AS description,
-               sp.place_group_id     AS placeId
-          FROM place_content pc
-          JOIN place sp
-            ON sp.place_id = pc.place_id
-         WHERE sp.place_group_id IN
+        pc.difficulty         AS difficulty,
+        pc.language           AS language,
+        pc.description        AS description,
+        pc.place_id           AS placeId
+        FROM place_content pc
+        WHERE pc.place_id IN
         <foreach collection="placeIds" item="id" open="(" separator="," close=")">
             #{id}
         </foreach>
-      ORDER BY sp.place_group_id, pc.difficulty, pc.language, pc.place_content_id
+        ORDER BY pc.place_id, pc.difficulty, pc.language, pc.place_content_id
     </select>
 
     <select id="findContentById"
