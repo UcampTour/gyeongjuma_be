@@ -5,7 +5,6 @@ import com.ucamp.gyeongjuma_be.common.exception.ErrorCode;
 import com.ucamp.gyeongjuma_be.member.repository.MemberRepository;
 import com.ucamp.gyeongjuma_be.place.domain.Place;
 import com.ucamp.gyeongjuma_be.place.repository.PlaceRepository;
-import com.ucamp.gyeongjuma_be.member.repository.MemberRepository;
 import com.ucamp.gyeongjuma_be.visit.domain.Visit;
 import com.ucamp.gyeongjuma_be.visit.dto.VisitRequest;
 import com.ucamp.gyeongjuma_be.visit.dto.VisitResponse;
@@ -20,6 +19,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class VisitServiceImpl implements VisitService {
     private static final double EARTH_RADIUS_METERS = 6_371_000;
+    private final MemberRepository memberRepository;
     private final PlaceRepository placeRepository;
     private final VisitRepository visitRepository;
 

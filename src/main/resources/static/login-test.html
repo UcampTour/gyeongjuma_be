@@ -209,6 +209,8 @@
   regCallback.textContent = CALLBACK_URL;
 
   let accessToken = null;
+  let lastProvider = null;   // 로그아웃 때 어느 사 세션을 끊을지 판단
+  let lastNaver = false;
 
   /* 키는 브라우저에만 보관한다 — 파일에 박으면 커밋에 섞인다 */
   const KEYS = ['kakaoKey','naverKey','googleKey'];
@@ -246,6 +248,8 @@
 
       if (res.ok && data.data){
         accessToken = data.data.accessToken;
+        lastProvider = provider;
+        lastNaver = (provider === 'NAVER');
         showProfile(data.data, provider);
       } else {
         say('err', '로그인 실패 (HTTP ' + res.status + ') — 설정 패널의 응답을 확인하세요.');
@@ -276,6 +280,11 @@
     } else { say('err','조회 실패 (HTTP ' + res.status + ')'); }
   }
 
+  /**
+   * 우리 서버 로그아웃은 리프레시 토큰과 쿠키만 지운다.
+   * 각 사(카카오·구글) 세션은 브라우저에 따로 남아 있어서, 그대로 두면
+   * 다시 로그인할 때 동의 화면 없이 바로 통과한다. 여기서 함께 끊는다.
+   */
   async function doLogout(){
     if (accessToken){
       const res = await fetch('/api/members/logout', {
@@ -283,10 +292,22 @@
       });
       dump(await res.json().catch(()=>'(본문 없음)'));
     }
+
+    if (lastProvider === 'KAKAO' && window.Kakao && Kakao.Auth && Kakao.Auth.getAccessToken()) {
+      await new Promise(done => Kakao.Auth.logout(done));
+    }
+    if (lastProvider === 'GOOGLE' && window.google) {
+      google.accounts.id.disableAutoSelect();   // 다음에 자동 선택되지 않게
+    }
+    // 네이버는 SDK에 로그아웃 함수가 없다. 완전히 끊으려면 네이버에서 직접 로그아웃해야 한다.
+
     accessToken = null;
+    lastProvider = null;
     profileView.classList.remove('on');
     loginView.style.display = '';
-    say('','로그아웃했습니다.');
+    say('', lastNaver ? '로그아웃했습니다. (네이버 세션은 네이버에서 직접 로그아웃해야 완전히 끊깁니다)'
+                      : '로그아웃했습니다. 다음 로그인 시 다시 동의를 받습니다.');
+    lastNaver = false;
   }
 
   /* ── 카카오 ── */
