@@ -68,14 +68,21 @@
          WHERE pqi.place_quiz_info_id = #{placeQuizInfoId}
     </select>
 
+    <!--
+      삭제한 문항(is_active = FALSE)은 제외한다.
+      문항 삭제는 응답 이력 때문에 비활성화로 처리되므로 행은 남아 있는데,
+      관리 화면에 계속 보이면 삭제가 안 된 것처럼 보인다.
+      목록의 questionCnt도 활성 문항만 세므로 기준을 맞춘다.
+    -->
     <select id="findQuestionsBySetId" resultType="com.ucamp.gyeongjuma_be.admin.dto.response.AdminQuizQuestionDto">
-        SELECT q.quiz_id       AS quizId,
-               q.question      AS question,
+        SELECT q.quiz_id        AS quizId,
+               q.question       AS question,
                q.origin_quiz_id AS originQuizId,
-               q.is_active     AS isActive
+               q.is_active      AS isActive
           FROM place_quiz pq
           JOIN quiz q ON q.quiz_id = pq.quiz_id
          WHERE pq.place_quiz_info_id = #{placeQuizInfoId}
+           AND q.is_active = TRUE
       ORDER BY q.quiz_id
     </select>
 
@@ -151,6 +158,68 @@
          WHERE pqi.origin_info_id = #{originInfoId}
       ORDER BY pqi.language, pqi.place_quiz_info_id
     </select>
+
+    <!-- ── 수정: 행을 유지한 채 내용만 바꾼다 ── -->
+
+    <update id="updateQuizSet">
+        UPDATE place_quiz_info
+           SET title       = #{title},
+               description = #{description},
+               <if test="difficulty != null">difficulty = #{difficulty},</if>
+               <if test="isActive != null">
+                   is_active  = #{isActive},
+                   deleted_at = CASE WHEN #{isActive} THEN NULL ELSE COALESCE(deleted_at, #{updatedAt}) END,
+               </if>
+               updated_at  = #{updatedAt}
+         WHERE place_quiz_info_id = #{placeQuizInfoId}
+    </update>
+
+    <update id="updateQuestion">
+        UPDATE quiz
+           SET question   = #{question},
+               updated_at = #{updatedAt}
+         WHERE quiz_id    = #{quizId}
+    </update>
+
+    <update id="updateAnswer">
+        UPDATE quiz_answer
+           SET content    = #{content},
+               is_correct = #{isCorrect}
+         WHERE answer_id  = #{answerId}
+    </update>
+
+    <select id="findAnswerIdsByQuizId" resultType="long">
+        SELECT answer_id FROM quiz_answer WHERE quiz_id = #{quizId} ORDER BY answer_id
+    </select>
+
+    <!--
+      정답 위치가 바뀌면 이미 답한 회원의 기록이 실제와 어긋난다.
+      회원이 고른 보기(answer_id)는 그대로 두고 정답 여부만 새 정답 기준으로 다시 계산한다.
+      (이미 지급된 포인트는 회수하지 않는다)
+    -->
+    <update id="recalculateResponses">
+        UPDATE member_quiz_response r
+          JOIN quiz_answer a ON a.answer_id = r.answer_id
+           SET r.is_correct = a.is_correct
+         WHERE r.quiz_id IN
+        <foreach collection="quizIds" item="qid" open="(" separator="," close=")">
+            #{qid}
+        </foreach>
+    </update>
+
+    <!--
+      문항 삭제는 항상 비활성화다. member_quiz_response가 quiz_id를 참조하고
+      번역본이 origin_quiz_id로 원본을 가리켜서, 행을 지우면 회원 기록과 번역본 연결이 깨진다.
+      조회 쿼리들이 q.is_active = TRUE로 거르므로 화면에서는 사라진다.
+    -->
+    <update id="softDeleteQuestion">
+        UPDATE quiz
+           SET is_active  = FALSE,
+               deleted_at = #{deletedAt},
+               updated_at = #{deletedAt}
+         WHERE quiz_id    = #{quizId}
+           AND is_active  = TRUE
+    </update>
 
     <!-- 응답 이력(member_quiz_response)이 문항을 참조하므로 물리 삭제 없이 비활성화만 한다 -->
     <update id="softDeleteQuizSet">
