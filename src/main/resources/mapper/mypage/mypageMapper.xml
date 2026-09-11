@@ -11,8 +11,19 @@
       같은 장소가 언어 수만큼 중복해서 나온다. 그룹당 한 줄만 남기되
       회원 언어판을 우선 고르고, 없으면 ko, 그것도 없으면 가장 작은 place_id를 쓴다.
     -->
-    <select id="findVisitHistoryByMemberId" resultType="com.ucamp.gyeongjuma_be.mypage.dto.response.VisitHistoryDto">
-        SELECT visitId, placeId, placeName, address, imageUrl, visitedAt
+    <resultMap id="VisitHistoryMap" type="com.ucamp.gyeongjuma_be.mypage.dto.response.VisitHistoryDto">
+        <result property="visitId" column="visitId" />
+        <result property="placeId" column="placeId" />
+        <result property="placeName" column="placeName" />
+        <result property="address" column="address" />
+        <result property="imageUrl" column="imageUrl" />
+        <result property="visitedAt" column="visitedAt" />
+        <result property="lng" column="lng" />
+        <result property="lat" column="lat" />
+    </resultMap>
+
+    <select id="findVisitHistoryByMemberId" resultMap="VisitHistoryMap">
+        SELECT visitId, placeId, placeName, address, imageUrl, visitedAt, lng, lat
           FROM (
                 SELECT v.visit_id                                  AS visitId,
                        p.place_id                                  AS placeId,
@@ -25,7 +36,9 @@
                            ORDER BY (p.language = m.locale) DESC,
                                     (p.language = 'ko') DESC,
                                     p.place_id
-                       ) AS rn
+                       ) AS rn,
+                       p.map_x AS lng,
+                       p.map_y AS lat
                   FROM member m
                   JOIN visit v
                     ON v.member_id = m.member_id

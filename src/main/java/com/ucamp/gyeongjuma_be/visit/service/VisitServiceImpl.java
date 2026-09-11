@@ -22,7 +22,6 @@ public class VisitServiceImpl implements VisitService {
     private final MemberRepository memberRepository;
     private final PlaceRepository placeRepository;
     private final VisitRepository visitRepository;
-    private final MemberRepository memberRepository;
 
     @Override
     @Transactional(readOnly = true)

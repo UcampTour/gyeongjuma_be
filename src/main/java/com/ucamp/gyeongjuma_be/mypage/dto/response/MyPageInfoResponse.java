@@ -16,6 +16,9 @@ public record MyPageInfoResponse(
         /** 모든 문항을 푼 퀴즈 세트 수 */
         Long quizCount,
         /** 담긴 장소를 모두 방문한 코스 수 */
-        Long courseCount
+        Long courseCount,
+        Long totalCourse,
+        Long totalQuiz,
+        Long totalPlace
 ) {
 }

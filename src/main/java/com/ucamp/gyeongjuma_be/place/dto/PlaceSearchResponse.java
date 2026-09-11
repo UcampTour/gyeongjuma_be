@@ -24,6 +24,7 @@ public class PlaceSearchResponse {
     private String add1;
     private String add2;
     private String parking;
+    private Long totalFavorite;
 
     @JsonProperty("isVisited")
     private Boolean isVisited;

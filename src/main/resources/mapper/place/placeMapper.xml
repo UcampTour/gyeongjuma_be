@@ -10,6 +10,7 @@
         <result property="originalName" column="place_name"/>
         <result property="category" column="category"/>
         <result property="visitCnt" column="visitCnt"/>
+        <result property="totalFavorite" column="totalFavorite"/>
         <result property="lat" column="lat"/>
         <result property="lng" column="lng"/>
         <result property="add1" column="add1"/>
@@ -167,6 +168,11 @@
                 FROM visit v
                 WHERE v.place_id = p.place_id
             ) AS visitCnt, <!-- 방문자수 추가 -->
+            (
+                SELECT COUNT(*)
+                FROM favorite f
+                WHERE f.place_id = p.place_id
+            ) AS totalFavorite,
             p.map_y AS lat,
             p.map_x AS lng,
             p.add1 AS add1,
