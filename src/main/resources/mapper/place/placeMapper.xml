@@ -22,6 +22,7 @@
         <result property="parking" column="parking"/>
         <result property="isVisited" column="isVisited"/>
         <result property="isFavorite" column="isFavorite"/>
+        <result property="audioCount" column="audioCount" />
         <result property="imageUrl" column="imageUrl"/>
         <association property="description" javaType="com.ucamp.gyeongjuma_be.place.dto.PlaceDescription">
             <result property="easy" column="easyDescription"/>
@@ -258,6 +259,11 @@
                 ) THEN TRUE
                 ELSE FALSE
             END AS isFavorite,
+            (
+                SELECT COUNT(*)
+                    FROM audio a
+                WHERE a.place_id = p.place_id
+            ) AS audioCount,  -- 26.09.12 오디오 개수 컬럼 추가
             NULLIF(p.first_image, '') AS imageUrl
         FROM place p
         LEFT JOIN (

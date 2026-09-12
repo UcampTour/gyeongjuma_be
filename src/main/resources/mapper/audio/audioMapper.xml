@@ -21,19 +21,18 @@
 
     <select id="findByPlaceId" resultType="com.ucamp.gyeongjuma_be.audio.dto.AudioResponse">
         SELECT
-            audio_id AS audioId,
-            audio_url AS audioUrl,
-            COALESCE(NULLIF(image_url, ''), (
-                SELECT first_image
-                FROM place
-                WHERE place_id = #{placeId}
-            )) AS imageUrl,
-            title,
-            script,
-            play_time AS playTime,
-            place_id
-        FROM audio
-        WHERE place_id = #{placeId}
-        ORDER BY audio_id ASC
+            a.audio_id AS audioId,
+            a.audio_url AS audioUrl,
+            COALESCE(NULLIF(a.image_url, ''), p.first_image) AS imageUrl,
+            a.title,
+            a.script,
+            a.play_time AS playTime,
+            a.place_id AS placeId,
+            p.add1 AS address
+        FROM audio a
+            JOIN place p
+                ON a.place_id = p.place_id
+        WHERE a.place_id = #{placeId}
+            ORDER BY a.audio_id ASC
     </select>
 </mapper>
