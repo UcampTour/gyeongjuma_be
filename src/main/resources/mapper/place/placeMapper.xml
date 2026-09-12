@@ -10,6 +10,7 @@
         <result property="originalName" column="place_name"/>
         <result property="category" column="category"/>
         <result property="visitCnt" column="visitCnt"/>
+        <result property="totalFavorite" column="totalFavorite"/>
         <result property="lat" column="lat"/>
         <result property="lng" column="lng"/>
         <result property="add1" column="add1"/>
@@ -21,6 +22,7 @@
         <result property="parking" column="parking"/>
         <result property="isVisited" column="isVisited"/>
         <result property="isFavorite" column="isFavorite"/>
+        <result property="audioCount" column="audioCount" />
         <result property="imageUrl" column="imageUrl"/>
         <association property="description" javaType="com.ucamp.gyeongjuma_be.place.dto.PlaceDescription">
             <result property="easy" column="easyDescription"/>
@@ -167,6 +169,11 @@
                 FROM visit v
                 WHERE v.place_id = p.place_id
             ) AS visitCnt, <!-- 방문자수 추가 -->
+            (
+                SELECT COUNT(*)
+                FROM favorite f
+                WHERE f.place_id = p.place_id
+            ) AS totalFavorite,
             p.map_y AS lat,
             p.map_x AS lng,
             p.add1 AS add1,
@@ -252,6 +259,11 @@
                 ) THEN TRUE
                 ELSE FALSE
             END AS isFavorite,
+            (
+                SELECT COUNT(*)
+                    FROM audio a
+                WHERE a.place_id = p.place_id
+            ) AS audioCount,  -- 26.09.12 오디오 개수 컬럼 추가
             NULLIF(p.first_image, '') AS imageUrl
         FROM place p
         LEFT JOIN (

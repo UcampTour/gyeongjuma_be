@@ -1,7 +1,9 @@
 package com.ucamp.gyeongjuma_be.admin.controller;
 
 import com.ucamp.gyeongjuma_be.admin.dto.request.QuizCreateRequest;
+import com.ucamp.gyeongjuma_be.admin.dto.request.QuizQuestionCreateRequest;
 import com.ucamp.gyeongjuma_be.admin.dto.request.QuizTranslationRequest;
+import com.ucamp.gyeongjuma_be.admin.dto.request.QuizUpdateRequest;
 import com.ucamp.gyeongjuma_be.admin.dto.response.AdminQuizSetDto;
 import com.ucamp.gyeongjuma_be.admin.dto.response.AdminQuizDetailResponse;
 import com.ucamp.gyeongjuma_be.admin.dto.response.AdminQuizListResponse;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -68,6 +71,39 @@ public class AdminQuizController {
     /**
      * 4. 퀴즈 문제집 삭제 (문제집·문항 비활성화, 응답 이력은 보존)
      */
+    /**
+     * 4. 퀴즈 세트 수정 — 문항·보기의 내용과 정답을 바꾼다 (행은 유지)
+     */
+    @PutMapping("/{placeQuizInfoId}")
+    public ResponseEntity<ApiResponse<AdminQuizDetailResponse>> updateQuiz(
+            @PathVariable Long placeQuizInfoId,
+            @Valid @RequestBody QuizUpdateRequest request) {
+        AdminQuizDetailResponse response = adminQuizService.updateQuiz(placeQuizInfoId, request);
+        return ResponseEntity.ok(ApiResponse.success("퀴즈를 수정했습니다.", response));
+    }
+
+    /**
+     * 4-1. 문항 추가
+     */
+    @PostMapping("/{placeQuizInfoId}/questions")
+    public ResponseEntity<ApiResponse<AdminQuizDetailResponse>> addQuestion(
+            @PathVariable Long placeQuizInfoId,
+            @Valid @RequestBody QuizQuestionCreateRequest request) {
+        AdminQuizDetailResponse response = adminQuizService.addQuestion(placeQuizInfoId, request);
+        return ResponseEntity.ok(ApiResponse.success("문항을 추가했습니다.", response));
+    }
+
+    /**
+     * 4-2. 문항 삭제 — 응답 이력이 참조하므로 비활성화만 한다
+     */
+    @DeleteMapping("/{placeQuizInfoId}/questions/{quizId}")
+    public ResponseEntity<ApiResponse<AdminQuizDetailResponse>> deleteQuestion(
+            @PathVariable Long placeQuizInfoId,
+            @PathVariable Long quizId) {
+        AdminQuizDetailResponse response = adminQuizService.deleteQuestion(placeQuizInfoId, quizId);
+        return ResponseEntity.ok(ApiResponse.success("문항을 삭제했습니다.", response));
+    }
+
     /**
      * 4. 번역본 등록 — 원본 세트를 지정해 언어별 세트를 만든다.
      * 문항마다 originQuizId로 원본 문항을 지정해야 하며, 이 연결이 포인트 중복 지급을 막는다.

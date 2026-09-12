@@ -24,6 +24,8 @@ public class PlaceSearchResponse {
     private String add1;
     private String add2;
     private String parking;
+    private Long totalFavorite;
+    private Long audioCount;  // 오디오개수
 
     @JsonProperty("isVisited")
     private Boolean isVisited;

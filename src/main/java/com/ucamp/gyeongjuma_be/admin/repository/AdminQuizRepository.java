@@ -65,6 +65,29 @@ public interface AdminQuizRepository {
     /** 특정 세트의 번역본 목록 (원본 세트 ID로 조회) */
     List<AdminQuizSetDto> findTranslationsByOriginId(@Param("originInfoId") Long originInfoId);
 
+    int updateQuizSet(@Param("placeQuizInfoId") Long placeQuizInfoId,
+                      @Param("title") String title,
+                      @Param("description") String description,
+                      @Param("difficulty") String difficulty,
+                      @Param("isActive") Boolean isActive,
+                      @Param("updatedAt") LocalDateTime updatedAt);
+
+    int updateQuestion(@Param("quizId") Long quizId,
+                       @Param("question") String question,
+                       @Param("updatedAt") LocalDateTime updatedAt);
+
+    int updateAnswer(@Param("answerId") Long answerId,
+                     @Param("content") String content,
+                     @Param("isCorrect") boolean isCorrect);
+
+    List<Long> findAnswerIdsByQuizId(@Param("quizId") Long quizId);
+
+    /** 정답이 바뀐 뒤 기존 응답의 정답 여부를 다시 계산한다 */
+    int recalculateResponses(@Param("quizIds") List<Long> quizIds);
+
+    int softDeleteQuestion(@Param("quizId") Long quizId,
+                           @Param("deletedAt") LocalDateTime deletedAt);
+
     int softDeleteQuizSet(@Param("placeQuizInfoId") Long placeQuizInfoId,
                           @Param("deletedAt") LocalDateTime deletedAt);
 
