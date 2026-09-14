@@ -13,4 +13,7 @@ public interface VisitRepository {
     boolean existsByMemberIdAndPlaceId(@Param("memberId") Long memberId, @Param("placeId") Long placeId);
 
     int save(Visit visit);
+
+    int replacePlaceIdsForLanguage(@Param("memberId") Long memberId,
+                                   @Param("language") String language);
 }

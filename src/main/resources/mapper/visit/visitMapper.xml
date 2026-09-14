@@ -29,4 +29,24 @@
         INSERT INTO visit (member_id, place_id)
         VALUES (#{memberId}, #{placeId})
     </insert>
+
+    <!--
+        현재 방문 장소와 같은 place_group_id를 가지면서 요청 언어인 장소가
+        있을 때만 visit.place_id를 target으로 바꾼다. target이 없으면 INNER JOIN되지 않으므로
+        해당 방문 기록은 변경되지 않는다.
+    -->
+    <update id="replacePlaceIdsForLanguage">
+        UPDATE visit v
+        JOIN place p
+          ON p.place_id = v.place_id
+        JOIN place target
+          ON target.place_group_id = p.place_group_id
+         AND LOWER(target.language) = LOWER(#{language})
+         AND target.is_active = TRUE
+        SET v.place_id = target.place_id
+        WHERE v.member_id = #{memberId}
+          AND p.place_group_id IS NOT NULL
+          AND p.is_active = TRUE
+          AND p.place_id &lt;&gt; target.place_id
+    </update>
 </mapper>

@@ -14,6 +14,7 @@ import com.ucamp.gyeongjuma_be.member.dto.response.MemberInfoResponse;
 import com.ucamp.gyeongjuma_be.member.dto.response.NicknameCheckResponse;
 import com.ucamp.gyeongjuma_be.member.dto.response.TokenResult;
 import com.ucamp.gyeongjuma_be.member.repository.MemberRepository;
+import com.ucamp.gyeongjuma_be.visit.repository.VisitRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,7 @@ import java.util.List;
 public class MemberServiceImpl implements MemberService {
 
     private final MemberRepository memberRepository;
+    private final VisitRepository visitRepository;
     private final List<SocialTokenVerifier> socialTokenVerifiers;
     private final JwtTokenProvider jwtTokenProvider;
     private final TransactionTemplate transactionTemplate;
@@ -112,6 +114,7 @@ public class MemberServiceImpl implements MemberService {
     @Transactional
     public MemberInfoResponse registerExtraInfo(Long memberId, ExtraInfoRequest request) {
         Member member = getActiveMember(memberId);
+        String locale = request.localeOrDefault();
 
         // 본인이 이미 쓰고 있는 닉네임이 아니라면 중복 검사
         if (!request.nickname().equals(member.getNickname())
@@ -120,14 +123,18 @@ public class MemberServiceImpl implements MemberService {
         }
 
         memberRepository.updateExtraInfo(memberId, request.nickname(),
-                request.difficultyOrDefault(), request.localeOrDefault());
+                request.difficultyOrDefault(), locale);
+
+        if (!locale.equalsIgnoreCase(member.getLocale())) {
+            visitRepository.replacePlaceIdsForLanguage(memberId, locale);
+        }
 
         return MemberInfoResponse.builder()
                 .memberId(memberId)
                 .nickname(request.nickname())
                 .profileImage(member.getProfileImgUrl())
                 .difficulty(request.difficultyOrDefault())
-                .locale(request.localeOrDefault())
+                .locale(locale)
                 .build();
     }
 
@@ -156,6 +163,10 @@ public class MemberServiceImpl implements MemberService {
 
         memberRepository.updateProfile(memberId, nickname, difficulty, locale,
                 LocalDateTime.now(ZoneId.of("Asia/Seoul")));
+
+        if (locale != null && !locale.equalsIgnoreCase(member.getLocale())) {
+            visitRepository.replacePlaceIdsForLanguage(memberId, locale);
+        }
 
         return MemberInfoResponse.builder()
                 .memberId(memberId)
